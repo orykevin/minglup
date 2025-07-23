@@ -82,6 +82,7 @@ interface MultipleSelectorProps {
   >;
   /** hide the clear all button. */
   hideClearAllButton?: boolean;
+  addText?: string;
 }
 
 export interface MultipleSelectorRef {
@@ -204,6 +205,7 @@ const MultipleSelector = React.forwardRef<
       commandProps,
       inputProps,
       hideClearAllButton = false,
+      addText,
     }: MultipleSelectorProps,
     ref: React.Ref<MultipleSelectorRef>,
   ) => {
@@ -384,7 +386,7 @@ const MultipleSelector = React.forwardRef<
             onChange?.(newOptions);
           }}
         >
-          {`Create "${inputValue}"`}
+          {`${addText || "Create"} "${inputValue}"`}
         </CommandItem>
       );
 
@@ -445,7 +447,7 @@ const MultipleSelector = React.forwardRef<
           commandProps?.onKeyDown?.(e);
         }}
         className={cn(
-          "h-auto overflow-visible bg-transparent",
+          "h-auto overflow-visible bg-transparent dark:bg-input/30",
           commandProps?.className,
         )}
         shouldFilter={
