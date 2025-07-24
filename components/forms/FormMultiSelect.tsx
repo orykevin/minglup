@@ -2,8 +2,9 @@
 
 import MultipleSelector, { Option } from "../ui/multi-select";
 import { cn } from "@/lib/utils";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useFormState } from "react-hook-form";
 import { Label } from "./FormWrapper";
+import { useMemo } from "react";
 
 interface MultiSelectProps extends React.InputHTMLAttributes<HTMLDivElement> {
   label?: string;
@@ -15,7 +16,18 @@ interface MultiSelectProps extends React.InputHTMLAttributes<HTMLDivElement> {
   isRequired?: boolean;
   tooltip?: string;
   heightSize?: "sm" | "md" | "lg" | "xl";
+  addText?: string;
+  options: Option[];
+  customErrorMessage?: string;
 }
+
+type MultipleErrorField = {
+  value: {
+    message: string;
+    type: string;
+    ref: undefined | string;
+  };
+};
 
 export const FormMultiSelect = ({
   label,
@@ -26,25 +38,32 @@ export const FormMultiSelect = ({
   displayError = true,
   isRequired,
   tooltip,
+  addText,
+  options,
+  customErrorMessage,
   ...props
 }: MultiSelectProps) => {
   const { control, setValue, watch } = useFormContext();
-  const { error, isTouched } = control.getFieldState(name);
+  const { errors } = useFormState({ name });
 
-  const savedEmail: Option[] = [
-    {
-      value: "kevinory2020@gmail.com",
-      label: "kevinory2020@gmail.com",
-    },
-    {
-      value: "kevinaja2020@gmail.com",
-      label: "kevinaja2020@gmail.com",
-    },
-    {
-      value: "kevinoryworks@gmail.com",
-      label: "kevinoryworks@gmail.com",
-    },
-  ];
+  const multipleFieldError = useMemo(
+    () => errors[name] as unknown as MultipleErrorField[],
+    [errors],
+  );
+
+  const errorFileds = useMemo(() => {
+    if (!multipleFieldError || !multipleFieldError.length) return undefined;
+    let index: number[] = [];
+    let errorMessage: string = "";
+    multipleFieldError.forEach((error, i) => {
+      index.push(i + 1);
+      errorMessage = `${error.value.message}`;
+    });
+    return {
+      index,
+      errorMessage: errorMessage,
+    };
+  }, [multipleFieldError]);
 
   const selectedEmail = watch(name);
 
@@ -56,14 +75,24 @@ export const FormMultiSelect = ({
         </Label>
       )}
       <MultipleSelector
-        options={savedEmail}
+        options={options}
         creatable
         emptyIndicator="No email found"
         onChange={(options) => setValue(name, options)}
         value={selectedEmail}
+        addText={addText}
       />
-      {isTouched && error && displayError && (
-        <p className="text-red-500"> {error.message} </p>
+      {displayError && errorFileds && errorFileds.index.length > 0 && (
+        <p className="text-red-500">
+          {" "}
+          {errorFileds.errorMessage + ` ${errorFileds.index.join(", ")}`}{" "}
+        </p>
+      )}
+      {errors[name] && displayError && (
+        <p className="text-red-500">
+          {" "}
+          {(errors[name].message as unknown as string | undefined) || ""}{" "}
+        </p>
       )}
     </div>
   );
