@@ -10,14 +10,23 @@ import { Button } from "@/components/ui/button";
 import { TextareaFormInput } from "@/components/forms/FormTextareaInput";
 import { FormMultiSelect } from "@/components/forms/FormMultiSelect";
 import SearchableMap from "@/components/maps/searchable-map";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Option } from "@/components/ui/multi-select";
 import { FormDateTimeInput } from "@/components/forms/FormDateTimeInput";
-import { MapPin } from "lucide-react";
+import { MapPin, X } from "lucide-react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { timezoneList } from "@/lib/timezones";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useRouter } from "next/navigation";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -27,7 +36,8 @@ const formSchema = z.object({
   description: z.string(),
   address: z.string().min(1, "Address is required"),
   latlong: z.array(z.number()),
-  date: z.date(),
+  dateTo: z.date(),
+  dateFrom: z.date(),
   timezone: z.string(),
   emails: z
     .array(z.object({ value: z.email("Invalid email"), label: z.string() }))
@@ -55,7 +65,8 @@ export default function CreateNewPage() {
       title: "",
       description: "",
       address: "",
-      date: new Date(),
+      dateFrom: new Date(),
+      dateTo: new Date(),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       latlong: [],
       emails: [],
@@ -63,9 +74,10 @@ export default function CreateNewPage() {
     resolver: zodResolver(formSchema),
   });
   const [openDialogMap, setOpenDialogMap] = useState(false);
+  const [openConfirmation, setOpenConfirmation] = useState(false);
 
   const onSubmitHandler = (val: z.infer<typeof formSchema>) => {
-    const dateTimeString = dayjs(val.date).format("YYYY-MM-DDTHH:mm:ss");
+    const dateTimeString = dayjs(val.dateFrom).format("YYYY-MM-DDTHH:mm:ss");
     const timezoned = dayjs.tz(dateTimeString, val.timezone);
     const timezonedString = timezoned.format();
     const localTime = dayjs(timezonedString).local();
@@ -73,6 +85,7 @@ export default function CreateNewPage() {
     console.log(timezoned.format(), localTime.format());
 
     console.log(val);
+    setOpenConfirmation(true);
   };
 
   const setAddressFromMap = (address: string, latlong: number[]) => {
@@ -96,23 +109,33 @@ export default function CreateNewPage() {
         <TextareaFormInput name="description" label="Description" />
         <div className="relative">
           <TextFormInput name="address" label="Address" isRequired />
-          <Dialog open={openDialogMap} onOpenChange={setOpenDialogMap}>
-            <DialogTrigger className="absolute top-0 right-0 cursor-pointer hover:underline">
-              <span className="flex gap-1 items-center">
-                select on map <MapPin size={18} />
-              </span>
-            </DialogTrigger>
-            <DialogContent className="p-3 py-3">
-              <SearchableMap
-                defaultPos={
-                  latlongValue.length > 0 ? latlongValue : [-6.2, 106.816666]
-                }
-                defaultAddress={addressValue || ""}
-                setForm={setAddressFromMap}
-                onCancel={() => setOpenDialogMap(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          {latlongValue.length > 0 ? (
+            <span
+              onClick={() => forms.setValue("latlong", [])}
+              className="absolute flex items-center gap-1 top-0 right-0 cursor-pointer hover:text-red-500"
+            >
+              delete pointed pin
+              <X size={18} />
+            </span>
+          ) : (
+            <Dialog open={openDialogMap} onOpenChange={setOpenDialogMap}>
+              <DialogTrigger className="absolute top-0 right-0 cursor-pointer hover:underline">
+                <span className="flex gap-1 items-center">
+                  select on map <MapPin size={18} />
+                </span>
+              </DialogTrigger>
+              <DialogContent className="p-3 py-3">
+                <SearchableMap
+                  defaultPos={
+                    latlongValue.length > 0 ? latlongValue : [-6.2, 106.816666]
+                  }
+                  defaultAddress={addressValue || ""}
+                  setForm={setAddressFromMap}
+                  onCancel={() => setOpenDialogMap(false)}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
         <FormDateTimeInput />
         <FormMultiSelect
@@ -122,10 +145,92 @@ export default function CreateNewPage() {
           options={savedEmail}
           isRequired
         />
-        <Button className="w-full mt-6" type="submit" size="lg">
-          Submit
-        </Button>
+        <Button className="w-full">Submit</Button>
       </FormWrapper>
+      <Dialog open={openConfirmation} onOpenChange={setOpenConfirmation}>
+        <DialogContent>
+          <DialogTitle>Confirmation</DialogTitle>
+          <DialogDescription>
+            You will notify all emails, make sure the information is correct
+          </DialogDescription>
+          <div>
+            <FullInformation {...forms.getValues()} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+const FullInformation = (allValue: z.infer<typeof formSchema>) => {
+  const router = useRouter();
+  const createMinggle = useMutation(api.minggle.createMinggle);
+
+  const timezone = timezoneList.find((timezone) =>
+    timezone.utc.some((utc) => utc === allValue.timezone),
+  );
+
+  const createMinggleHandler = () => {
+    try {
+      const validateData = formSchema.parse(allValue);
+      if (validateData) {
+        const dateTimeFrom = dayjs(allValue.dateFrom).format(
+          "YYYY-MM-DDTHH:mm:ss",
+        );
+        const dateTimeTo = dayjs(allValue.dateTo).format("YYYY-MM-DDTHH:mm:ss");
+        const timezonedFrom = dayjs.tz(dateTimeFrom, allValue.timezone);
+        const timezonedStringFrom = timezonedFrom.format();
+        const timezonedTo = dayjs.tz(dateTimeTo, allValue.timezone);
+        const timezonedStringTo = timezonedTo.format();
+        const payload = {
+          ...validateData,
+          dateFrom: timezonedStringFrom,
+          dateTo: timezonedStringTo,
+          emails: validateData.emails.map((email) => email.value),
+        };
+        createMinggle(payload).then((res) => {
+          console.log(res);
+          router.push(`/minggle/${res}`);
+        });
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  return (
+    <div>
+      <p className="text-primary/95">Title : </p>
+      <p className="font-semibold">{allValue.title}</p>
+      <p className="text-primary/95 mt-2">Description :</p>
+      <p className="font-semibold">{allValue.description}</p>
+      <p className="text-primary/95 mt-2">Address :</p>
+      <p className="font-semibold">{allValue.address}</p>
+      <p className="text-primary/95 mt-2">From :</p>
+      <p className="font-semibold">
+        {dayjs(allValue.dateFrom).format("dddd DD MMMM YYYY")}
+        {", "}
+        {dayjs(allValue.dateFrom).format("HH:mm")}
+        {` (UTC ${timezone?.offset && (timezone?.offset || 0) > 0 ? "+" : ""}${timezone?.offset})`}
+      </p>
+      <p className="text-primary/95 mt-2">To :</p>
+      <p className="font-semibold">
+        {dayjs(allValue.dateTo).format("dddd DD MMMM YYYY")}
+        {", "}
+        {dayjs(allValue.dateTo).format("HH:mm")}
+        {` (UTC ${timezone?.offset && (timezone?.offset || 0) > 0 ? "+" : ""}${timezone?.offset})`}
+      </p>
+      <p className="text-primary/95 mt-2">Invited Emails : </p>
+      <div>
+        {allValue.emails.map((email) => (
+          <p className="font-semibold" key={email.value}>
+            {email.value}
+          </p>
+        ))}
+      </div>
+      <Button className="w-full mt-6" onClick={createMinggleHandler}>
+        Submit
+      </Button>
+    </div>
+  );
+};

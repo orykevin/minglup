@@ -26,7 +26,7 @@ export default function Home() {
           <EmptyPlaceholder
             className="mt-20"
             title="No Minggle yet"
-            subtitle="Create a new minggle to start mingling"
+            subtitle="Create a new minggle"
             buttonText="Create a minggle"
             imageSrc="/wave.png"
             clickAction={onClickCreate}
