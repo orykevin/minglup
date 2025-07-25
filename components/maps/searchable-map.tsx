@@ -148,7 +148,7 @@ const CustomSearchMap = ({
 
       <MapContainer
         center={selectedPos as LatLngExpression}
-        zoom={13}
+        zoom={12}
         scrollWheelZoom
         style={{ width: "100%", height: "400px" }}
       >

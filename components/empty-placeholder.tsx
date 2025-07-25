@@ -18,7 +18,7 @@ const EmptyPlaceholder = ({
   className?: string;
 }) => {
   return (
-    <div className={cn("text-center", className)}>
+    <div className={cn("text-center px-3", className)}>
       <h4 className="text-2xl font-bold">{title}</h4>
       <h6 className="text-base font-semibold text-primary/90">{subtitle}</h6>
       <div>

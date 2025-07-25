@@ -16,7 +16,7 @@ import type {
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
 import type * as middleware from "../middleware.js";
-import type * as myFunctions from "../myFunctions.js";
+import type * as minggle from "../minggle.js";
 import type * as user from "../user.js";
 
 /**
@@ -31,7 +31,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   http: typeof http;
   middleware: typeof middleware;
-  myFunctions: typeof myFunctions;
+  minggle: typeof minggle;
   user: typeof user;
 }>;
 export declare const api: FilterApi<
