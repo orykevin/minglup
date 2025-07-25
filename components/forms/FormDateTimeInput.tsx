@@ -16,15 +16,30 @@ import { SelectWindow } from "../ui/select-window";
 import dayjs from "dayjs";
 import { Label } from "./FormWrapper";
 import { useFormContext } from "react-hook-form";
+import { getTimeStringFromDate } from "@/lib/utils";
 
-export function FormDateTimeInput() {
+export function FormDateTimeInput({
+  defaultFrom,
+  defaultTo,
+  defaultTimezone,
+}: {
+  defaultFrom?: Date;
+  defaultTo?: Date;
+  defaultTimezone?: string;
+}) {
   const { control, setValue, getValues } = useFormContext();
   const [openFrom, setOpenFrom] = React.useState(false);
   const [openTo, setOpenTo] = React.useState(false);
-  const [dateFrom, setDateFrom] = React.useState<Date>(new Date());
-  const [timeFrom, setTimeFrom] = React.useState<string>("00:00");
-  const [dateTo, setDateTo] = React.useState<Date>(new Date());
-  const [timeTo, setTimeTo] = React.useState<string>("00:00");
+  const [dateFrom, setDateFrom] = React.useState<Date>(
+    defaultFrom || new Date(),
+  );
+  const [timeFrom, setTimeFrom] = React.useState<string>(
+    defaultFrom ? getTimeStringFromDate(defaultFrom) : "00:00",
+  );
+  const [dateTo, setDateTo] = React.useState<Date>(defaultTo || new Date());
+  const [timeTo, setTimeTo] = React.useState<string>(
+    defaultTo ? getTimeStringFromDate(defaultTo) : "00:00",
+  );
 
   useEffect(() => {
     if (dateFrom) {
@@ -48,7 +63,7 @@ export function FormDateTimeInput() {
   }, [dateTo, timeTo, control]);
 
   const mappedOptions = useMemo(() => {
-    const defaultValue = getValues("timezone");
+    const defaultValue = defaultTimezone || getValues("timezone");
     return timezoneList.map((timezone) => {
       const utcOption =
         timezone.utc.find((utc) => utc === defaultValue) || timezone.utc[0];
@@ -57,7 +72,7 @@ export function FormDateTimeInput() {
         label: `${timezone.value} (UTC ${timezone.offset > 0 ? "+" : ""}${timezone.offset})`,
       };
     });
-  }, []);
+  }, [defaultTimezone]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -152,8 +167,13 @@ export function FormDateTimeInput() {
             step="60"
             defaultValue="00:00"
             value={timeTo}
+            min={timeFrom}
             onChange={(e) => {
-              setTimeTo(e.target.value);
+              if (e.target.value < timeFrom && dateTo === dateFrom) {
+                setTimeTo(timeFrom);
+              } else {
+                setTimeTo(e.target.value);
+              }
             }}
             className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
           />
@@ -164,12 +184,11 @@ export function FormDateTimeInput() {
         <SelectWindow
           options={mappedOptions}
           onChange={(val) => {
-            console.log(val);
             setValue("timezone", val);
           }}
           placeholder="Select timezone"
           className="w-full"
-          defaultValue={getValues("timezone")}
+          defaultValue={defaultTimezone || getValues("timezone")}
         />
       </div>
     </div>

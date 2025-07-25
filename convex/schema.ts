@@ -15,8 +15,9 @@ export const minggleTable = defineTable({
   latlong: v.array(v.number()),
   timezone: v.string(),
   title: v.string(),
-  userId: v.id("users")
-})
+  userId: v.id("users"),
+  isFinished: v.optional(v.boolean())
+}).index("byUser", ["userId", "isFinished"])
 
 export default defineSchema({
   ...authTables,

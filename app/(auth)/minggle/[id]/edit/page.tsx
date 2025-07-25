@@ -1,7 +1,7 @@
 "use client";
 
 import { FormWrapper } from "@/components/forms/FormWrapper";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,7 +26,10 @@ import timezone from "dayjs/plugin/timezone";
 import { timezoneList } from "@/lib/timezones";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useQuery } from "convex-helpers/react/cache";
+import { Id } from "@/convex/_generated/dataModel";
+import { setRawDate } from "@/lib/utils";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -59,7 +62,11 @@ const savedEmail: Option[] = [
   },
 ];
 
-export default function CreateNewPage() {
+export default function EditMingglePage() {
+  const params = useParams();
+  const data = useQuery(api.minggle.getMinggle, {
+    minggleId: params.id as Id<"minggle">,
+  });
   const forms = useForm({
     defaultValues: {
       title: "",
@@ -97,9 +104,34 @@ export default function CreateNewPage() {
   const addressValue = forms.watch("address");
   const latlongValue = forms.watch("latlong");
 
+  useEffect(() => {
+    if (data) {
+      const timzonedFrom = dayjs.utc(data.dateFrom).tz(data.timezone);
+      const timzonedTo = dayjs.utc(data.dateTo).tz(data.timezone);
+
+      forms.setValue("title", data.title);
+      forms.setValue("description", data?.description || "");
+      forms.setValue("address", data.address);
+      forms.setValue("latlong", data.latlong);
+      forms.setValue("dateFrom", timzonedFrom.toDate());
+      forms.setValue("dateTo", timzonedTo.toDate());
+      forms.setValue("timezone", data.timezone);
+      forms.setValue(
+        "emails",
+        data.emails.map((email) => ({
+          value: email,
+          label: email,
+          fixed: true,
+        })),
+      );
+    }
+  }, [data]);
+
+  if (!data) return <div>Loading ...</div>;
+
   return (
     <div>
-      <h1 className="text-2xl my-3 font-bold">Create new minggle</h1>
+      <h1 className="text-2xl my-3 font-bold">Edit minggle</h1>
       <FormWrapper
         forms={forms}
         onSubmitHandler={onSubmitHandler}
@@ -137,12 +169,19 @@ export default function CreateNewPage() {
             </Dialog>
           )}
         </div>
-        <FormDateTimeInput />
+        <FormDateTimeInput
+          defaultFrom={setRawDate(data.dateFrom)}
+          defaultTo={setRawDate(data.dateTo)}
+          defaultTimezone={data.timezone}
+        />
         <FormMultiSelect
           name="emails"
           label="Emails"
           addText="Add email"
-          options={savedEmail}
+          options={savedEmail.map((option) => ({
+            ...option,
+            fixed: data.emails.some((email) => email === option.value),
+          }))}
           isRequired
         />
         <Button className="w-full">Submit</Button>
@@ -151,7 +190,7 @@ export default function CreateNewPage() {
         <DialogContent>
           <DialogTitle>Confirmation</DialogTitle>
           <DialogDescription>
-            You will notify all emails, make sure the information is correct
+            You will notify all emails, make sure your edit is correct
           </DialogDescription>
           <div>
             <FullInformation {...forms.getValues()} />
@@ -164,13 +203,15 @@ export default function CreateNewPage() {
 
 const FullInformation = (allValue: z.infer<typeof formSchema>) => {
   const router = useRouter();
-  const createMinggle = useMutation(api.minggle.createMinggle);
+  const params = useParams();
+  const editMinggle = useMutation(api.minggle.editMinggle);
 
   const timezone = timezoneList.find((timezone) =>
     timezone.utc.some((utc) => utc === allValue.timezone),
   );
 
   const createMinggleHandler = () => {
+    if (!params.id) return;
     try {
       const validateData = formSchema.parse(allValue);
       if (validateData) {
@@ -188,10 +229,12 @@ const FullInformation = (allValue: z.infer<typeof formSchema>) => {
           dateTo: timezonedStringTo,
           emails: validateData.emails.map((email) => email.value),
         };
-        createMinggle(payload).then((res) => {
-          console.log(res);
-          router.push(`/minggle/${res}`);
-        });
+        editMinggle({ ...payload, minggleId: params.id as Id<"minggle"> }).then(
+          (res) => {
+            console.log(res);
+            router.push(`/minggle/${params.id}`);
+          },
+        );
       }
     } catch (e) {
       console.log(e);
