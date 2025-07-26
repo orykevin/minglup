@@ -1,6 +1,7 @@
 import { ConvexError, convexToJson, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { isAuthUserId, isMinggleOwner } from "./middleware";
+import { addEmailListsHelper } from "./emailLists";
 
 const minggleArgs = {
     address: v.string(),
@@ -39,6 +40,7 @@ export const createMinggle = mutation({
         const minggleId = await ctx.db.insert("minggle", { ...args, userId })
 
         if (!minggleId) throw new ConvexError("Error when creating minggle")
+        await addEmailListsHelper(ctx, userId, args.emails)
         return minggleId
     },
 })
@@ -49,12 +51,12 @@ export const editMinggle = mutation({
         minggleId: v.id("minggle")
     },
     handler: async (ctx, { minggleId, ...minggleArgs }) => {
-        const { minggle } = await isMinggleOwner(ctx, minggleId)
+        const { minggle, userId } = await isMinggleOwner(ctx, minggleId)
 
         await ctx.db.patch(minggle._id, {
             ...minggleArgs
         })
-
+        await addEmailListsHelper(ctx, userId, minggleArgs.emails)
         return "Success Edit Minggle"
     }
 })

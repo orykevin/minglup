@@ -47,21 +47,6 @@ const formSchema = z.object({
     .min(1, "At least one email is required"),
 });
 
-const savedEmail: Option[] = [
-  {
-    value: "kevinory2020@gmail.com",
-    label: "kevinory2020@gmail.com",
-  },
-  {
-    value: "kevinaja2020@gmail.com",
-    label: "kevinaja2020@gmail.com",
-  },
-  {
-    value: "kevinoryworks@gmail.com",
-    label: "kevinoryworks@gmail.com",
-  },
-];
-
 export default function EditMingglePage() {
   const params = useParams();
   const data = useQuery(api.minggle.getMinggle, {
@@ -83,15 +68,7 @@ export default function EditMingglePage() {
   const [openDialogMap, setOpenDialogMap] = useState(false);
   const [openConfirmation, setOpenConfirmation] = useState(false);
 
-  const onSubmitHandler = (val: z.infer<typeof formSchema>) => {
-    const dateTimeString = dayjs(val.dateFrom).format("YYYY-MM-DDTHH:mm:ss");
-    const timezoned = dayjs.tz(dateTimeString, val.timezone);
-    const timezonedString = timezoned.format();
-    const localTime = dayjs(timezonedString).local();
-
-    console.log(timezoned.format(), localTime.format());
-
-    console.log(val);
+  const onSubmitHandler = () => {
     setOpenConfirmation(true);
   };
 
@@ -103,6 +80,8 @@ export default function EditMingglePage() {
 
   const addressValue = forms.watch("address");
   const latlongValue = forms.watch("latlong");
+
+  const emailLists = useQuery(api.emailLists.getEmailLists);
 
   useEffect(() => {
     if (data) {
@@ -178,10 +157,14 @@ export default function EditMingglePage() {
           name="emails"
           label="Emails"
           addText="Add email"
-          options={savedEmail.map((option) => ({
-            ...option,
-            fixed: data.emails.some((email) => email === option.value),
-          }))}
+          options={
+            emailLists
+              ? emailLists.emails.map((email) => ({
+                  value: email,
+                  label: email,
+                }))
+              : []
+          }
           isRequired
         />
         <Button className="w-full">Submit</Button>

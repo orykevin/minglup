@@ -27,6 +27,7 @@ import { timezoneList } from "@/lib/timezones";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
+import { useQuery } from "convex-helpers/react/cache";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -43,21 +44,6 @@ const formSchema = z.object({
     .array(z.object({ value: z.email("Invalid email"), label: z.string() }))
     .min(1, "At least one email is required"),
 });
-
-const savedEmail: Option[] = [
-  {
-    value: "kevinory2020@gmail.com",
-    label: "kevinory2020@gmail.com",
-  },
-  {
-    value: "kevinaja2020@gmail.com",
-    label: "kevinaja2020@gmail.com",
-  },
-  {
-    value: "kevinoryworks@gmail.com",
-    label: "kevinoryworks@gmail.com",
-  },
-];
 
 export default function CreateNewPage() {
   const forms = useForm({
@@ -76,15 +62,9 @@ export default function CreateNewPage() {
   const [openDialogMap, setOpenDialogMap] = useState(false);
   const [openConfirmation, setOpenConfirmation] = useState(false);
 
-  const onSubmitHandler = (val: z.infer<typeof formSchema>) => {
-    const dateTimeString = dayjs(val.dateFrom).format("YYYY-MM-DDTHH:mm:ss");
-    const timezoned = dayjs.tz(dateTimeString, val.timezone);
-    const timezonedString = timezoned.format();
-    const localTime = dayjs(timezonedString).local();
+  const emailLists = useQuery(api.emailLists.getEmailLists);
 
-    console.log(timezoned.format(), localTime.format());
-
-    console.log(val);
+  const onSubmitHandler = () => {
     setOpenConfirmation(true);
   };
 
@@ -142,7 +122,14 @@ export default function CreateNewPage() {
           name="emails"
           label="Emails"
           addText="Add email"
-          options={savedEmail}
+          options={
+            emailLists
+              ? emailLists.emails.map((email) => ({
+                  value: email,
+                  label: email,
+                }))
+              : []
+          }
           isRequired
         />
         <Button className="w-full">Submit</Button>
