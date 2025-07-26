@@ -8,6 +8,7 @@ import EmptyPlaceholder from "@/components/empty-placeholder";
 import { useQuery } from "convex-helpers/react/cache";
 import { api } from "@/convex/_generated/api";
 import { MinggleCard } from "@/components/minggle-card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
   const router = useRouter();
@@ -28,7 +29,21 @@ export default function Home() {
         </div>
         <div className="space-y-3 mt-4">
           {activeMinggle === undefined ? (
-            <p>Loading ...</p>
+            <div className="space-y-3">
+              {[...new Array(3)].map((_, index) => (
+                <Skeleton className="w-full h-44" key={index}>
+                  <div className="flex gap-2 p-3 items-center">
+                    <Skeleton className="w-[100px] h-18 bg-primary/20" />
+                    <Skeleton className="w-1/2 h-10 bg-primary/20" />
+                  </div>
+                  <div className="space-y-2 px-3">
+                    <Skeleton className="w-[75%] h-4 bg-primary/20" />
+                    <Skeleton className="w-[75%] h-4 bg-primary/20" />
+                    <Skeleton className="w-[75%] h-4 bg-primary/20" />
+                  </div>
+                </Skeleton>
+              ))}
+            </div>
           ) : activeMinggle.length > 0 ? (
             activeMinggle.map((minggle) => <MinggleCard data={minggle} />)
           ) : (

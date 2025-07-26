@@ -6,7 +6,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { timezoneList } from "@/lib/timezones";
 import {
   EllipsisVertical,
@@ -14,6 +14,7 @@ import {
   MapPin,
   Pencil,
   User2,
+  X,
 } from "lucide-react";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
@@ -24,6 +25,18 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogHeader,
+  DialogContent,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useConvexMutation } from "@/lib/convex-functions";
+import { toast } from "@/hooks/use-hooks";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -31,10 +44,16 @@ dayjs.extend(timezone);
 export default function MingglePage() {
   const router = useRouter();
   const params = useParams();
+
+  const [openDialog, setOpenDialog] = useState(false);
+
   const data = useQuery(api.minggle.getMinggle, {
     minggleId: params.id as Id<"minggle">,
   });
   const userData = useQuery(api.user.getProfile);
+  const { mutate: cancelMinggle, isPending: isCanceling } = useConvexMutation(
+    api.minggle.cancelMinggle,
+  );
 
   const localDate = useMemo(() => {
     if (!data) return;
@@ -65,16 +84,21 @@ export default function MingglePage() {
     };
   }, [data]);
 
-  if (!data) return <p>Loading ...</p>;
+  if (!data) return <SkeletonMinggleInfo />;
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold">{data?.title}</h1>
-          <p className="text-primary/95">{data?.description}</p>
-        </div>
-        {userData?._id === data.userId && (
+      <div className="w-full flex justify-between items-center mb-1">
+        <Badge
+          variant={data.isCanceled ? "destructive" : "default"}
+          className={cn(
+            "mb-3 text-primary",
+            data.isFinished ? "bg-green-500" : "bg-blue-500",
+          )}
+        >
+          {data.isCanceled ? "Canceled" : "On-going"}
+        </Badge>
+        {userData?._id === data.userId && !data.isCanceled && (
           <span>
             <DropdownMenu>
               <DropdownMenuTrigger>
@@ -87,10 +111,20 @@ export default function MingglePage() {
                   <Pencil />
                   <p>Edit</p>
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setOpenDialog(true)}>
+                  <X />
+                  <p>Cancel</p>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </span>
         )}
+      </div>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold">{data?.title}</h1>
+          <p className="text-primary/95">{data?.description}</p>
+        </div>
       </div>
       <div className="space-y-3">
         <div className="border rounded-sm p-2 px-3">
@@ -167,6 +201,62 @@ export default function MingglePage() {
           ))}
         </div>
       </div>
+      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+        <DialogContent>
+          <DialogHeader>Cancel Minggle</DialogHeader>
+          <DialogDescription>
+            Are you sure you want to cancel this minggle? <br /> this action
+            cannot be undone
+          </DialogDescription>
+          <div className="flex gap-3">
+            <Button
+              className="flex-1"
+              variant="outline"
+              onClick={() => setOpenDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="flex-1"
+              variant="destructive"
+              onClick={() => {
+                cancelMinggle(
+                  {
+                    minggleId: data._id,
+                  },
+                  {
+                    onSuccess(res) {
+                      toast({
+                        title: "Success",
+                        description: res,
+                        variant: "success",
+                      });
+                      setOpenDialog(false);
+                    },
+                  },
+                );
+              }}
+            >
+              {isCanceling ? "Cancelling..." : "Confirm"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+const SkeletonMinggleInfo = () => {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="w-24 h-8" />
+      <div className="space-y-2">
+        <Skeleton className="w-3/4 h-10" />
+        <Skeleton className="w-2/3 h-6" />
+      </div>
+      <Skeleton className="w-full h-20" />
+      <Skeleton className="w-full h-52" />
+      <Skeleton className="w-full h-52" />
+    </div>
+  );
+};

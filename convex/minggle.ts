@@ -60,3 +60,21 @@ export const editMinggle = mutation({
         return "Success Edit Minggle"
     }
 })
+
+export const cancelMinggle = mutation({
+    args: {
+        minggleId: v.id("minggle")
+    },
+    handler: async (ctx, args) => {
+        const { minggle } = await isMinggleOwner(ctx, args.minggleId)
+        if (minggle.isFinished) throw new ConvexError("This minggle is already finished")
+        if (minggle.isCanceled) throw new ConvexError("This minggle is already cancelled")
+
+        await ctx.db.patch(minggle._id, {
+            isCanceled: true,
+            canceledAt: Date.now()
+        })
+
+        return "Minggle is cancelled successfully"
+    }
+})

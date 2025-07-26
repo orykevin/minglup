@@ -24,10 +24,11 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { timezoneList } from "@/lib/timezones";
-import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex-helpers/react/cache";
+import { useConvexMutation } from "@/lib/convex-functions";
+import { toast } from "@/hooks/use-hooks";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -151,7 +152,9 @@ export default function CreateNewPage() {
 
 const FullInformation = (allValue: z.infer<typeof formSchema>) => {
   const router = useRouter();
-  const createMinggle = useMutation(api.minggle.createMinggle);
+  const { mutate: createMinggle, isPending } = useConvexMutation(
+    api.minggle.createMinggle,
+  );
 
   const timezone = timezoneList.find((timezone) =>
     timezone.utc.some((utc) => utc === allValue.timezone),
@@ -175,9 +178,15 @@ const FullInformation = (allValue: z.infer<typeof formSchema>) => {
           dateTo: timezonedStringTo,
           emails: validateData.emails.map((email) => email.value),
         };
-        createMinggle(payload).then((res) => {
-          console.log(res);
-          router.push(`/minggle/${res}`);
+        createMinggle(payload, {
+          onSuccess: (res) => {
+            toast({
+              title: "Success",
+              description: "Minggle created successfully",
+              variant: "success",
+            });
+            router.push(`/minggle/${res}`);
+          },
         });
       }
     } catch (e) {

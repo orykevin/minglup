@@ -16,8 +16,10 @@ export const minggleTable = defineTable({
   timezone: v.string(),
   title: v.string(),
   userId: v.id("users"),
-  isFinished: v.optional(v.boolean())
-}).index("byUser", ["userId", "isFinished"])
+  isFinished: v.optional(v.boolean()),
+  isCanceled: v.optional(v.boolean()),
+  canceledAt: v.optional(v.number())
+}).index("byUser", ["userId", "isFinished", "isCanceled"])
 
 export const emailLists = defineTable({
   emails: v.array(v.string()),

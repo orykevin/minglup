@@ -24,12 +24,14 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { timezoneList } from "@/lib/timezones";
-import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "convex-helpers/react/cache";
 import { Id } from "@/convex/_generated/dataModel";
 import { setRawDate } from "@/lib/utils";
+import { useConvexMutation } from "@/lib/convex-functions";
+import { toast } from "@/hooks/use-hooks";
+import { Skeleton } from "@/components/ui/skeleton";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -106,7 +108,7 @@ export default function EditMingglePage() {
     }
   }, [data]);
 
-  if (!data) return <div>Loading ...</div>;
+  if (!data) return <SkeletonForm />;
 
   return (
     <div>
@@ -187,7 +189,9 @@ export default function EditMingglePage() {
 const FullInformation = (allValue: z.infer<typeof formSchema>) => {
   const router = useRouter();
   const params = useParams();
-  const editMinggle = useMutation(api.minggle.editMinggle);
+  const { mutate: editMinggle, isPending } = useConvexMutation(
+    api.minggle.editMinggle,
+  );
 
   const timezone = timezoneList.find((timezone) =>
     timezone.utc.some((utc) => utc === allValue.timezone),
@@ -212,10 +216,17 @@ const FullInformation = (allValue: z.infer<typeof formSchema>) => {
           dateTo: timezonedStringTo,
           emails: validateData.emails.map((email) => email.value),
         };
-        editMinggle({ ...payload, minggleId: params.id as Id<"minggle"> }).then(
-          (res) => {
-            console.log(res);
-            router.push(`/minggle/${params.id}`);
+        editMinggle(
+          { ...payload, minggleId: params.id as Id<"minggle"> },
+          {
+            onSuccess: () => {
+              toast({
+                title: "Success",
+                description: "Minggle edited successfully",
+                variant: "success",
+              });
+              router.push(`/minggle/${params.id}`);
+            },
           },
         );
       }
@@ -257,6 +268,38 @@ const FullInformation = (allValue: z.infer<typeof formSchema>) => {
       <Button className="w-full mt-6" onClick={createMinggleHandler}>
         Confirm
       </Button>
+    </div>
+  );
+};
+
+const SkeletonForm = () => {
+  return (
+    <div>
+      <Skeleton className="w-40 h-8 mb-3" />
+      <div className="space-y-3">
+        {[...new Array(3)].map(() => (
+          <div className="space-y-1">
+            <Skeleton className="w-24 h-6" />
+            <Skeleton className="w-full h-8" />
+          </div>
+        ))}
+        {[...new Array(2)].map(() => (
+          <div className="space-y-1">
+            <Skeleton className="w-24 h-6" />
+            <div className="w-full flex gap-3">
+              <Skeleton className="flex-2 h-8" />
+              <Skeleton className="flex-1 h-8" />
+            </div>
+          </div>
+        ))}
+        {[...new Array(2)].map(() => (
+          <div className="space-y-1">
+            <Skeleton className="w-24 h-6" />
+            <Skeleton className="w-full h-8" />
+          </div>
+        ))}
+        <Skeleton className="w-full h-8" />
+      </div>
     </div>
   );
 };
