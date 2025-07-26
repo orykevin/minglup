@@ -24,7 +24,7 @@ export const HeaderAuth = () => {
   const userData = useQueryCache(api.user.getProfile);
   return (
     <header className="bg-background p-4 border-b-2 border-slate-200 dark:border-slate-800 flex flex-row justify-between items-center">
-      MinglUp
+      <h4 onClick={() => router.push("/")}>MinglUp</h4>
       {isAuthenticated ? (
         <DropdownMenu>
           <DropdownMenuTrigger>

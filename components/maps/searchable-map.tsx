@@ -20,18 +20,18 @@ type MapQueryType = {
   display_name: string;
 };
 
-const customIcon = L.icon({
+export const customIcon = L.icon({
   iconUrl: "/gps.png", // path to your marker PNG
   iconSize: [48, 48], // adjust as needed
   iconAnchor: [16, 48], // point of the icon which corresponds to marker's location
   popupAnchor: [0, -48], // position of the popup relative to icon
 });
 
-const FlyToLocation = ({ position }: { position: LatLngExpression }) => {
+export const FlyToLocation = ({ position }: { position: LatLngExpression }) => {
   const map = useMap();
   useEffect(() => {
     if (position) {
-      map.flyTo(position, 14);
+      map.flyTo(position, 16);
     }
   }, [position, map]);
   return null;

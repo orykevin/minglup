@@ -15,10 +15,19 @@ export const minggleTable = defineTable({
   latlong: v.array(v.number()),
   timezone: v.string(),
   title: v.string(),
-  userId: v.id("users")
-})
+  userId: v.id("users"),
+  isFinished: v.optional(v.boolean()),
+  isCanceled: v.optional(v.boolean()),
+  canceledAt: v.optional(v.number())
+}).index("byUser", ["userId", "isFinished", "isCanceled"])
+
+export const emailLists = defineTable({
+  emails: v.array(v.string()),
+  userId: v.id('users')
+}).index("byUser", ["userId"])
 
 export default defineSchema({
   ...authTables,
-  minggle: minggleTable
+  minggle: minggleTable,
+  emailLists: emailLists
 });

@@ -14,6 +14,8 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as auth from "../auth.js";
+import type * as emailLists from "../emailLists.js";
+import type * as helper from "../helper.js";
 import type * as http from "../http.js";
 import type * as middleware from "../middleware.js";
 import type * as minggle from "../minggle.js";
@@ -29,6 +31,8 @@ import type * as user from "../user.js";
  */
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  emailLists: typeof emailLists;
+  helper: typeof helper;
   http: typeof http;
   middleware: typeof middleware;
   minggle: typeof minggle;

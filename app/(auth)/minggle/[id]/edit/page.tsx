@@ -1,7 +1,7 @@
 "use client";
 
 import { FormWrapper } from "@/components/forms/FormWrapper";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -25,10 +25,13 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { timezoneList } from "@/lib/timezones";
 import { api } from "@/convex/_generated/api";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "convex-helpers/react/cache";
+import { Id } from "@/convex/_generated/dataModel";
+import { setRawDate } from "@/lib/utils";
 import { useConvexMutation } from "@/lib/convex-functions";
 import { toast } from "@/hooks/use-hooks";
+import { Skeleton } from "@/components/ui/skeleton";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -46,7 +49,11 @@ const formSchema = z.object({
     .min(1, "At least one email is required"),
 });
 
-export default function CreateNewPage() {
+export default function EditMingglePage() {
+  const params = useParams();
+  const data = useQuery(api.minggle.getMinggle, {
+    minggleId: params.id as Id<"minggle">,
+  });
   const forms = useForm({
     defaultValues: {
       title: "",
@@ -63,8 +70,6 @@ export default function CreateNewPage() {
   const [openDialogMap, setOpenDialogMap] = useState(false);
   const [openConfirmation, setOpenConfirmation] = useState(false);
 
-  const emailLists = useQuery(api.emailLists.getEmailLists);
-
   const onSubmitHandler = () => {
     setOpenConfirmation(true);
   };
@@ -78,9 +83,36 @@ export default function CreateNewPage() {
   const addressValue = forms.watch("address");
   const latlongValue = forms.watch("latlong");
 
+  const emailLists = useQuery(api.emailLists.getEmailLists);
+
+  useEffect(() => {
+    if (data) {
+      const timzonedFrom = dayjs.utc(data.dateFrom).tz(data.timezone);
+      const timzonedTo = dayjs.utc(data.dateTo).tz(data.timezone);
+
+      forms.setValue("title", data.title);
+      forms.setValue("description", data?.description || "");
+      forms.setValue("address", data.address);
+      forms.setValue("latlong", data.latlong);
+      forms.setValue("dateFrom", timzonedFrom.toDate());
+      forms.setValue("dateTo", timzonedTo.toDate());
+      forms.setValue("timezone", data.timezone);
+      forms.setValue(
+        "emails",
+        data.emails.map((email) => ({
+          value: email,
+          label: email,
+          fixed: true,
+        })),
+      );
+    }
+  }, [data]);
+
+  if (!data) return <SkeletonForm />;
+
   return (
     <div>
-      <h1 className="text-2xl my-3 font-bold">Create new minggle</h1>
+      <h1 className="text-2xl my-3 font-bold">Edit minggle</h1>
       <FormWrapper
         forms={forms}
         onSubmitHandler={onSubmitHandler}
@@ -118,7 +150,11 @@ export default function CreateNewPage() {
             </Dialog>
           )}
         </div>
-        <FormDateTimeInput />
+        <FormDateTimeInput
+          defaultFrom={setRawDate(data.dateFrom)}
+          defaultTo={setRawDate(data.dateTo)}
+          defaultTimezone={data.timezone}
+        />
         <FormMultiSelect
           name="emails"
           label="Emails"
@@ -139,7 +175,7 @@ export default function CreateNewPage() {
         <DialogContent>
           <DialogTitle>Confirmation</DialogTitle>
           <DialogDescription>
-            You will notify all emails, make sure the information is correct
+            You will notify all emails, make sure your edit is correct
           </DialogDescription>
           <div>
             <FullInformation {...forms.getValues()} />
@@ -152,8 +188,9 @@ export default function CreateNewPage() {
 
 const FullInformation = (allValue: z.infer<typeof formSchema>) => {
   const router = useRouter();
-  const { mutate: createMinggle, isPending } = useConvexMutation(
-    api.minggle.createMinggle,
+  const params = useParams();
+  const { mutate: editMinggle, isPending } = useConvexMutation(
+    api.minggle.editMinggle,
   );
 
   const timezone = timezoneList.find((timezone) =>
@@ -161,6 +198,7 @@ const FullInformation = (allValue: z.infer<typeof formSchema>) => {
   );
 
   const createMinggleHandler = () => {
+    if (!params.id) return;
     try {
       const validateData = formSchema.parse(allValue);
       if (validateData) {
@@ -178,16 +216,19 @@ const FullInformation = (allValue: z.infer<typeof formSchema>) => {
           dateTo: timezonedStringTo,
           emails: validateData.emails.map((email) => email.value),
         };
-        createMinggle(payload, {
-          onSuccess: (res) => {
-            toast({
-              title: "Success",
-              description: "Minggle created successfully",
-              variant: "success",
-            });
-            router.push(`/minggle/${res}`);
+        editMinggle(
+          { ...payload, minggleId: params.id as Id<"minggle"> },
+          {
+            onSuccess: () => {
+              toast({
+                title: "Success",
+                description: "Minggle edited successfully",
+                variant: "success",
+              });
+              router.push(`/minggle/${params.id}`);
+            },
           },
-        });
+        );
       }
     } catch (e) {
       console.log(e);
@@ -227,6 +268,38 @@ const FullInformation = (allValue: z.infer<typeof formSchema>) => {
       <Button className="w-full mt-6" onClick={createMinggleHandler}>
         Confirm
       </Button>
+    </div>
+  );
+};
+
+const SkeletonForm = () => {
+  return (
+    <div>
+      <Skeleton className="w-40 h-8 mb-3" />
+      <div className="space-y-3">
+        {[...new Array(3)].map(() => (
+          <div className="space-y-1">
+            <Skeleton className="w-24 h-6" />
+            <Skeleton className="w-full h-8" />
+          </div>
+        ))}
+        {[...new Array(2)].map(() => (
+          <div className="space-y-1">
+            <Skeleton className="w-24 h-6" />
+            <div className="w-full flex gap-3">
+              <Skeleton className="flex-2 h-8" />
+              <Skeleton className="flex-1 h-8" />
+            </div>
+          </div>
+        ))}
+        {[...new Array(2)].map(() => (
+          <div className="space-y-1">
+            <Skeleton className="w-24 h-6" />
+            <Skeleton className="w-full h-8" />
+          </div>
+        ))}
+        <Skeleton className="w-full h-8" />
+      </div>
     </div>
   );
 };

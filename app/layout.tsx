@@ -5,6 +5,7 @@ import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { ConvexQueryCacheProvider } from "convex-helpers/react/cache/provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const jakartaSans = Plus_Jakarta_Sans({
   variable: "--font-jakarta-sans",
@@ -32,6 +33,8 @@ export default function RootLayout({
         enableSystem
         disableTransitionOnChange
       >
+        <Toaster />
+
         <html lang="en">
           <body className={`${jakartaSans.variable} antialiased`}>
             <ConvexClientProvider>
