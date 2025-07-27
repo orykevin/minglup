@@ -1,0 +1,1 @@
+export const MAX_EDIT_COUNT = 10

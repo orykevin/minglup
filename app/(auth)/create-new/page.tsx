@@ -225,7 +225,7 @@ const FullInformation = (allValue: z.infer<typeof formSchema>) => {
         ))}
       </div>
       <Button className="w-full mt-6" onClick={createMinggleHandler}>
-        Confirm
+        {isPending ? "Creating..." : "Confirm"}
       </Button>
     </div>
   );

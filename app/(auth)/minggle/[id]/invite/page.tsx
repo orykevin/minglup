@@ -1,0 +1,237 @@
+"use client";
+
+import EmailIcon from "@/components/email-icons";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogHeader,
+  DialogContent,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import LinkButton from "@/components/ui/link-button";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import { toast } from "@/hooks/use-hooks";
+import { useConvexMutation } from "@/lib/convex-functions";
+import { cn } from "@/lib/utils";
+import { useQuery } from "convex/react";
+import { Check, MailPlus, Plus, Trash, X } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import React, { useMemo, useState } from "react";
+import z from "zod";
+
+const emailSchema = z.email();
+
+export default function InvitePage() {
+  const router = useRouter();
+  const params = useParams();
+  const [invites, setInvites] = useState([
+    { id: crypto.randomUUID(), email: "" },
+  ]);
+  const [openDialog, setOpenDialog] = useState(false);
+
+  const statusEmailData = useQuery(api.emails.getMinggleEmailStatus, {
+    minggleId: params.id as Id<"minggle">,
+  });
+  const data = useQuery(api.minggle.getMinggle, {
+    minggleId: params.id as Id<"minggle">,
+  });
+  const { mutate, isPending } = useConvexMutation(api.minggle.inviteMinggle);
+
+  const emailChecker = useMemo(() => {
+    return invites.map((invite) => {
+      const isValidEmail = emailSchema.safeParse(invite.email);
+      const isExist = data?.emails.includes(invite.email);
+      return isValidEmail.success && !isExist;
+    });
+  }, [invites]);
+
+  const handleInviteMinggle = () => {
+    if (emailChecker.includes(false)) return;
+    mutate(
+      {
+        minggleId: params.id as Id<"minggle">,
+        emails: invites.map((invite) => invite.email),
+      },
+      {
+        onSuccess(res) {
+          setOpenDialog(false);
+          toast({
+            title: "Success",
+            description: res,
+            variant: "success",
+          });
+          router.push(`/minggle/${params.id}`);
+        },
+        onError(error) {
+          toast({
+            title: "Error",
+            description: error.data,
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
+
+  if (data === undefined) return <div>Loading...</div>;
+
+  return (
+    <div>
+      <h4 className="font-bold text-lg mb-2">Invited</h4>
+      <div className="space-y-2">
+        {data.emails.map((email) => {
+          const emailStatus = statusEmailData?.find((e) => e?.email === email);
+          return (
+            <div className="flex justify-between items-center p-3 border rounded-md">
+              <p className="text-lg font-semibold" key={email}>
+                {email}
+              </p>
+              <EmailIcon status={emailStatus?.status || "sent"} />
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex h-max items-center justify-between mb-3 mt-4">
+        <h4 className="font-bold text-lg">Invite More</h4>
+        <Button
+          size="sm"
+          onClick={() =>
+            setInvites((invites) => [
+              ...invites,
+              { id: crypto.randomUUID(), email: "" },
+            ])
+          }
+        >
+          <MailPlus />
+        </Button>
+      </div>
+      <div>
+        <div className="space-y-3">
+          {invites.map((invite, index) => (
+            <MemoEmailInput
+              invitedEmails={data.emails}
+              key={invite.id}
+              invite={invite}
+              index={index}
+              setInvites={setInvites}
+            />
+          ))}
+        </div>
+        <div className="flex gap-3 mt-8">
+          <LinkButton
+            className="flex-1"
+            variant={"outline"}
+            href={`/minggle/${params.id}`}
+          >
+            Cancel
+          </LinkButton>
+          <Button
+            onClick={() => setOpenDialog(true)}
+            className="flex-1"
+            disabled={!emailChecker.every(Boolean)}
+          >
+            Submit
+          </Button>
+        </div>
+      </div>
+      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+        <DialogContent>
+          <DialogHeader>Invite more</DialogHeader>
+          <DialogDescription>
+            You will invite {invites.length} people, you can't remove invited
+            emails later, make sure you invite the right emails
+          </DialogDescription>
+          <div className="space-y-2">
+            {invites.map((invite) => (
+              <p className="font-semibold" key={invite.id}>
+                {invite.email}
+              </p>
+            ))}
+          </div>
+          <div className="flex gap-3">
+            <Button
+              className="flex-1"
+              variant="outline"
+              onClick={() => setOpenDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button className="flex-1" onClick={handleInviteMinggle}>
+              {isPending ? "Inviting..." : "Yes, Invite"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+const EmailInput = ({
+  invitedEmails,
+  invite,
+  index,
+  setInvites,
+}: {
+  invitedEmails: string[];
+  invite: { id: string; email: string };
+  index: number;
+  setInvites: React.Dispatch<
+    React.SetStateAction<{ id: string; email: string }[]>
+  >;
+}) => {
+  const isExist = invitedEmails.includes(invite.email);
+  const isValidEmail = emailSchema.safeParse(invite.email).success && !isExist;
+  const isEmpty = invite.email === "";
+
+  return (
+    <div className="flex gap-3 items-center">
+      <div className="relative w-full">
+        <Input
+          type="email"
+          placeholder="Email"
+          key={invite.id}
+          onChange={(e) =>
+            setInvites((invites) => {
+              let newInvites = [...invites];
+              newInvites[index] = {
+                id: newInvites[index].id,
+                email: e.target.value,
+              };
+              return newInvites;
+            })
+          }
+          className={cn(
+            "pr-8",
+            isValidEmail && !isEmpty ? "border-green-500" : "",
+            !isValidEmail && !isEmpty ? "border-red-500" : "",
+          )}
+        />
+        {!isEmpty && (
+          <span className="absolute right-2 top-2.5">
+            {isValidEmail ? (
+              <Check className="text-green-500" size={18} />
+            ) : (
+              <X className="text-red-500" size={18} />
+            )}
+          </span>
+        )}
+      </div>
+      <div>
+        <Button
+          size={"icon"}
+          onClick={() =>
+            setInvites((invites) =>
+              invites.filter((data) => data.id !== invite.id),
+            )
+          }
+        >
+          <Trash />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+const MemoEmailInput = React.memo(EmailInput);
