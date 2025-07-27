@@ -8,14 +8,7 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { useMemo, useState } from "react";
 import { timezoneList } from "@/lib/timezones";
-import {
-  EllipsisVertical,
-  MailCheck,
-  MapPin,
-  Pencil,
-  User2,
-  X,
-} from "lucide-react";
+import { EllipsisVertical, MapPin, Pencil, Plus, User2, X } from "lucide-react";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
 import { customIcon, FlyToLocation } from "@/components/maps/searchable-map";
@@ -37,6 +30,8 @@ import { toast } from "@/hooks/use-hooks";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import EmailIcon from "@/components/email-icons";
+import { MAX_EDIT_COUNT } from "@/convex/constant";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -47,6 +42,9 @@ export default function MingglePage() {
 
   const [openDialog, setOpenDialog] = useState(false);
 
+  const statusEmailData = useQuery(api.emails.getMinggleEmailStatus, {
+    minggleId: params.id as Id<"minggle">,
+  });
   const data = useQuery(api.minggle.getMinggle, {
     minggleId: params.id as Id<"minggle">,
   });
@@ -84,6 +82,11 @@ export default function MingglePage() {
     };
   }, [data]);
 
+  const isCanEdit = useMemo(() => {
+    if (!data) return false;
+    return (data.editCount || 0) >= MAX_EDIT_COUNT;
+  }, [data]);
+
   if (!data) return <SkeletonMinggleInfo />;
 
   return (
@@ -106,10 +109,17 @@ export default function MingglePage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem
+                  disabled={isCanEdit}
                   onClick={() => router.push(`/minggle/${data._id}/edit`)}
                 >
                   <Pencil />
                   <p>Edit</p>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => router.push(`/minggle/${data._id}/invite`)}
+                >
+                  <Plus />
+                  <p>Invite</p>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setOpenDialog(true)}>
                   <X />
@@ -191,14 +201,19 @@ export default function MingglePage() {
           <User2 size={18} /> Invited people
         </p>
         <div className="space-y-2">
-          {data.emails.map((email) => (
-            <div className="flex justify-between items-center p-3 border rounded-md">
-              <p className="text-lg font-semibold" key={email}>
-                {email}
-              </p>
-              <MailCheck />
-            </div>
-          ))}
+          {data.emails.map((email) => {
+            const emailStatus = statusEmailData?.find(
+              (e) => e?.email === email,
+            );
+            return (
+              <div className="flex justify-between items-center p-3 border rounded-md">
+                <p className="text-lg font-semibold" key={email}>
+                  {email}
+                </p>
+                <EmailIcon status={emailStatus?.status || "sent"} />
+              </div>
+            );
+          })}
         </div>
       </div>
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>

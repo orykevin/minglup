@@ -1,7 +1,7 @@
 "use client";
 
 import { FormWrapper } from "@/components/forms/FormWrapper";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -17,7 +17,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DialogTrigger } from "@radix-ui/react-dialog";
-import { Option } from "@/components/ui/multi-select";
 import { FormDateTimeInput } from "@/components/forms/FormDateTimeInput";
 import { MapPin, X } from "lucide-react";
 import dayjs from "dayjs";
@@ -32,6 +31,8 @@ import { setRawDate } from "@/lib/utils";
 import { useConvexMutation } from "@/lib/convex-functions";
 import { toast } from "@/hooks/use-hooks";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MAX_EDIT_COUNT } from "@/convex/constant";
+import LinkButton from "@/components/ui/link-button";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -44,9 +45,6 @@ const formSchema = z.object({
   dateTo: z.date(),
   dateFrom: z.date(),
   timezone: z.string(),
-  emails: z
-    .array(z.object({ value: z.email("Invalid email"), label: z.string() }))
-    .min(1, "At least one email is required"),
 });
 
 export default function EditMingglePage() {
@@ -63,7 +61,6 @@ export default function EditMingglePage() {
       dateTo: new Date(),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       latlong: [],
-      emails: [],
     },
     resolver: zodResolver(formSchema),
   });
@@ -83,7 +80,7 @@ export default function EditMingglePage() {
   const addressValue = forms.watch("address");
   const latlongValue = forms.watch("latlong");
 
-  const emailLists = useQuery(api.emailLists.getEmailLists);
+  // const emailLists = useQuery(api.emailLists.getEmailLists);
 
   useEffect(() => {
     if (data) {
@@ -97,22 +94,24 @@ export default function EditMingglePage() {
       forms.setValue("dateFrom", timzonedFrom.toDate());
       forms.setValue("dateTo", timzonedTo.toDate());
       forms.setValue("timezone", data.timezone);
-      forms.setValue(
-        "emails",
-        data.emails.map((email) => ({
-          value: email,
-          label: email,
-          fixed: true,
-        })),
-      );
     }
+  }, [data]);
+
+  const editInfo = useMemo(() => {
+    return {
+      editRemaining: MAX_EDIT_COUNT - (data?.editCount || 0),
+      cantEdit: (data?.editCount || 0) >= MAX_EDIT_COUNT,
+    };
   }, [data]);
 
   if (!data) return <SkeletonForm />;
 
   return (
     <div>
-      <h1 className="text-2xl my-3 font-bold">Edit minggle</h1>
+      <h1 className="text-2xl my-3 font-bold">
+        Edit minggle{" "}
+        <span className="text-sm font-semibold">{`(${editInfo.editRemaining} ${editInfo.editRemaining > 1 ? "edits" : "edit"} left)`}</span>
+      </h1>
       <FormWrapper
         forms={forms}
         onSubmitHandler={onSubmitHandler}
@@ -155,30 +154,40 @@ export default function EditMingglePage() {
           defaultTo={setRawDate(data.dateTo)}
           defaultTimezone={data.timezone}
         />
-        <FormMultiSelect
-          name="emails"
-          label="Emails"
-          addText="Add email"
-          options={
-            emailLists
-              ? emailLists.emails.map((email) => ({
-                  value: email,
-                  label: email,
-                }))
-              : []
-          }
-          isRequired
-        />
-        <Button className="w-full">Submit</Button>
+        <div className="flex gap-3 mt-4">
+          <LinkButton
+            variant="outline"
+            className="flex-1"
+            href={`/minggle/${params.id}`}
+          >
+            Cancel
+          </LinkButton>
+          <Button
+            className="flex-1"
+            disabled={(data.editCount || 0) >= MAX_EDIT_COUNT}
+          >
+            Submit
+          </Button>
+        </div>
       </FormWrapper>
       <Dialog open={openConfirmation} onOpenChange={setOpenConfirmation}>
         <DialogContent>
           <DialogTitle>Confirmation</DialogTitle>
           <DialogDescription>
+            <span className="text-red-500/75">
+              {" "}
+              {editInfo.editRemaining === 1
+                ? "This is your last edit"
+                : "You have " + editInfo.editRemaining + " edits left"}
+            </span>
+            <br />
             You will notify all emails, make sure your edit is correct
           </DialogDescription>
           <div>
-            <FullInformation {...forms.getValues()} />
+            <FullInformation
+              allValue={{ ...forms.getValues() }}
+              editInfo={editInfo}
+            />
           </div>
         </DialogContent>
       </Dialog>
@@ -186,7 +195,13 @@ export default function EditMingglePage() {
   );
 }
 
-const FullInformation = (allValue: z.infer<typeof formSchema>) => {
+const FullInformation = ({
+  allValue,
+  editInfo,
+}: {
+  allValue: Omit<z.infer<typeof formSchema>, "emails">;
+  editInfo: { editRemaining: number; cantEdit: boolean };
+}) => {
   const router = useRouter();
   const params = useParams();
   const { mutate: editMinggle, isPending } = useConvexMutation(
@@ -214,7 +229,6 @@ const FullInformation = (allValue: z.infer<typeof formSchema>) => {
           ...validateData,
           dateFrom: timezonedStringFrom,
           dateTo: timezonedStringTo,
-          emails: validateData.emails.map((email) => email.value),
         };
         editMinggle(
           { ...payload, minggleId: params.id as Id<"minggle"> },
@@ -257,16 +271,12 @@ const FullInformation = (allValue: z.infer<typeof formSchema>) => {
         {dayjs(allValue.dateTo).format("HH:mm")}
         {` (UTC ${timezone?.offset && (timezone?.offset || 0) > 0 ? "+" : ""}${timezone?.offset})`}
       </p>
-      <p className="text-primary/95 mt-2">Invited Emails : </p>
-      <div>
-        {allValue.emails.map((email) => (
-          <p className="font-semibold" key={email.value}>
-            {email.value}
-          </p>
-        ))}
-      </div>
-      <Button className="w-full mt-6" onClick={createMinggleHandler}>
-        Confirm
+      <Button
+        className="w-full mt-6"
+        onClick={createMinggleHandler}
+        disabled={editInfo.cantEdit}
+      >
+        {isPending ? "Loading..." : "Confirm"}
       </Button>
     </div>
   );
