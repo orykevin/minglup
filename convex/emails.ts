@@ -4,6 +4,7 @@ import { internalMutation, MutationCtx, query } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
 import { getMinggleData } from "./minggle";
+import { StatusEmailType } from "./schema";
 
 type SendEmailType = "create" | "edit" | "invited" | "cancel"
 
@@ -19,7 +20,7 @@ export const getMinggleEmailStatus = query({
         const minggleData = await getMinggleData(ctx, args.minggleId)
 
         const mappedData = await Promise.all(minggleData.emails.map(async (email) => {
-            return await ctx.db.query("minggleEmail").withIndex("byEmail", (q) => q.eq("email", email).eq("minggleId", args.minggleId).eq("minggleRef", minggleData.editCount || 0)).order("desc").first()
+            return await ctx.db.query("minggleEmail").withIndex("byEmail", (q) => q.eq("email", email).eq("minggleId", args.minggleId)).order("desc").first()
         }))
 
         return mappedData
@@ -84,31 +85,50 @@ export const sendEmailHelper = async (ctx: MutationCtx, args: { emails: string[]
             break;
     }
     args.emails.forEach(async (email) => {
-        try {
-            const resendId = await resend.sendEmail(ctx, {
-                from: "MinglUp <testuser@oryworks.com>",
-                to: email,
-                subject: html,
-                html
-            })
-            await ctx.db.insert("minggleEmail", {
-                email,
-                minggleId: args.minggleId,
-                minggleRef: args.minggleRef || 0,
-                resendId: resendId,
-                status: "sent"
-            })
-        } catch (e) {
-            console.log(e)
-            await ctx.db.insert("minggleEmail", {
-                email,
-                minggleId: args.minggleId,
-                minggleRef: args.minggleRef || 0,
-                status: "failed"
-            })
-        }
+        const previousEmail = await ctx.db.query("minggleEmail").withIndex("byEmail", (q) => q.eq("email", email).eq("minggleId", args.minggleId)).first()
+        if (previousEmail?.status === "failed") return;
+        await ctx.scheduler.runAfter(0, internal.emails.index.sendCustomEmail, { email, type, minggleId: args.minggleId, minggleRef: (args.minggleRef || 0) })
+        // try {
+        //     const resendId = await resend.sendEmail(ctx, {
+        //         from: "MinglUp <testuser@oryworks.com>",
+        //         to: email,
+        //         subject: html,
+        //         html
+        //     })
+        //     await ctx.db.insert("minggleEmail", {
+        //         email,
+        //         minggleId: args.minggleId,
+        //         minggleRef: args.minggleRef || 0,
+        //         resendId: resendId,
+        //         status: "sent",
+        //         type
+        //     })
+        // } catch (e) {
+        //     console.log(e)
+        //     await ctx.db.insert("minggleEmail", {
+        //         email,
+        //         minggleId: args.minggleId,
+        //         minggleRef: args.minggleRef || 0,
+        //         status: "failed",
+        //         type
+        //     })
+        // }
     })
 }
+
+export const mutateMinggleEmail = internalMutation({
+    args: {
+        minggleId: v.id("minggle"),
+        minggleRef: v.number(),
+        email: v.string(),
+        status: StatusEmailType,
+        type: v.string(),
+        resendId: v.optional(v.string())
+    },
+    handler: async (ctx, args) => {
+        await ctx.db.insert("minggleEmail", { ...args })
+    },
+})
 
 export const webhookMinggleEmailHelper = async (ctx: MutationCtx, emailId: string, status: Doc<"minggleEmail">["status"]) => {
     const minggleData = await ctx.db.query("minggleEmail").withIndex("byResendId", (q) => q.eq("resendId", emailId)).order("desc").first();
@@ -126,6 +146,7 @@ export const webhookMinggleEmailHelper = async (ctx: MutationCtx, emailId: strin
         minggleId: minggleData.minggleId,
         minggleRef: minggleData.minggleRef,
         resendId: minggleData.resendId,
+        type: minggleData.type,
         status: fixedStatus
     })
 }
