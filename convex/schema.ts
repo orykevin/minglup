@@ -33,6 +33,7 @@ export const minggleEmail = defineTable({
   minggleId: v.id("minggle"),
   minggleRef: v.number(), // number to track edited minggle
   resendId: v.optional(v.string()),
+  type: v.string(),
   status: v.union(v.literal("failed"), v.literal("sent"), v.literal("delivered"), v.literal("cancelled"), v.literal("bounced"), v.literal("complained"), v.literal("clicked"), v.literal("delivered_delayed"))
 }).index("byResendId", ["resendId"]).index("byMinggleId", ["minggleId", "minggleRef"]).index("byEmail", ['email', 'minggleId', 'minggleRef'])
 

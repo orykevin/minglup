@@ -2,9 +2,10 @@ import { ConvexError, convexToJson, v } from "convex/values";
 import { mutation, MutationCtx, query, QueryCtx } from "./_generated/server";
 import { isAuthUserId, isMinggleOwner } from "./middleware";
 import { addEmailListsHelper } from "./emailLists";
-import { Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 import { sendEmailHelper } from "./emails";
 import { MAX_EDIT_COUNT } from "./constant";
+import dayjs from "dayjs"
 
 const minggleArgs = {
     address: v.string(),
@@ -57,6 +58,8 @@ export const editMinggle = mutation({
         const { minggle } = await isMinggleOwner(ctx, minggleId)
 
         if (minggle.editCount && minggle.editCount >= MAX_EDIT_COUNT) throw new ConvexError("Max edit exceed")
+        if (!isMinggleAvailable(minggle)) throw new ConvexError("Minggle not available")
+
         const editCount = (minggle?.editCount || 0) + 1
         await ctx.db.patch(minggle._id, {
             ...minggleArgs,
@@ -74,6 +77,8 @@ export const inviteMinggle = mutation({
     }, handler: async (ctx, { minggleId, emails }) => {
         const { minggle, userId } = await isMinggleOwner(ctx, minggleId)
         const newEmails = emails.filter((email) => !minggle.emails.includes(email))
+
+        if (!isMinggleAvailable(minggle)) throw new ConvexError("Minggle not available")
 
         await ctx.db.patch(minggle._id, {
             emails: [...minggle.emails, ...newEmails]
@@ -97,6 +102,7 @@ export const cancelMinggle = mutation({
             isCanceled: true,
             canceledAt: Date.now()
         })
+        await sendEmailHelper(ctx, { minggleId: minggle._id, emails: minggle.emails, minggleRef: (minggle.editCount || 0) }, "cancel")
 
         return "Minggle is cancelled successfully"
     }
@@ -106,4 +112,9 @@ export const getMinggleData = async (ctx: MutationCtx | QueryCtx, minggleId: Id<
     const minggleData = await ctx.db.get(minggleId)
     if (!minggleData) throw new ConvexError("No minggle found")
     return minggleData
+}
+
+export const isMinggleAvailable = (minggleData: Doc<"minggle">) => {
+    const isEnoughTime = dayjs(minggleData.dateTo).valueOf() - Date.now() > (6 * 60 * 60 * 1000)
+    return (!minggleData.isCanceled && !minggleData.isFinished && isEnoughTime)
 }

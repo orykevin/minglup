@@ -19,7 +19,7 @@ export const getMinggleEmailStatus = query({
         const minggleData = await getMinggleData(ctx, args.minggleId)
 
         const mappedData = await Promise.all(minggleData.emails.map(async (email) => {
-            return await ctx.db.query("minggleEmail").withIndex("byEmail", (q) => q.eq("email", email).eq("minggleId", args.minggleId).eq("minggleRef", minggleData.editCount || 0)).order("desc").first()
+            return await ctx.db.query("minggleEmail").withIndex("byEmail", (q) => q.eq("email", email).eq("minggleId", args.minggleId)).order("desc").first()
         }))
 
         return mappedData
@@ -84,6 +84,8 @@ export const sendEmailHelper = async (ctx: MutationCtx, args: { emails: string[]
             break;
     }
     args.emails.forEach(async (email) => {
+        const previousEmail = await ctx.db.query("minggleEmail").withIndex("byEmail", (q) => q.eq("email", email).eq("minggleId", args.minggleId)).first()
+        if (previousEmail?.status === "failed") return;
         try {
             const resendId = await resend.sendEmail(ctx, {
                 from: "MinglUp <testuser@oryworks.com>",
@@ -96,7 +98,8 @@ export const sendEmailHelper = async (ctx: MutationCtx, args: { emails: string[]
                 minggleId: args.minggleId,
                 minggleRef: args.minggleRef || 0,
                 resendId: resendId,
-                status: "sent"
+                status: "sent",
+                type
             })
         } catch (e) {
             console.log(e)
@@ -104,7 +107,8 @@ export const sendEmailHelper = async (ctx: MutationCtx, args: { emails: string[]
                 email,
                 minggleId: args.minggleId,
                 minggleRef: args.minggleRef || 0,
-                status: "failed"
+                status: "failed",
+                type
             })
         }
     })
@@ -126,6 +130,7 @@ export const webhookMinggleEmailHelper = async (ctx: MutationCtx, emailId: strin
         minggleId: minggleData.minggleId,
         minggleRef: minggleData.minggleRef,
         resendId: minggleData.resendId,
+        type: minggleData.type,
         status: fixedStatus
     })
 }

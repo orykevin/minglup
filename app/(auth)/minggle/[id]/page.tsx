@@ -96,10 +96,14 @@ export default function MingglePage() {
           variant={data.isCanceled ? "destructive" : "default"}
           className={cn(
             "mb-3 text-primary",
-            data.isFinished ? "bg-green-500" : "bg-blue-500",
+            data.isFinished ? "bg-green-600" : "bg-blue-500",
           )}
         >
-          {data.isCanceled ? "Canceled" : "On-going"}
+          {data.isCanceled
+            ? "Canceled"
+            : data.isFinished
+              ? "Finished"
+              : "On-going"}
         </Badge>
         {userData?._id === data.userId && !data.isCanceled && (
           <span>

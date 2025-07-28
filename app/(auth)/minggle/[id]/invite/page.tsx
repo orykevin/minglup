@@ -1,5 +1,6 @@
 "use client";
 
+import { ControlledDialog } from "@/components/control-dialog";
 import EmailIcon from "@/components/email-icons";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,6 +9,12 @@ import {
   DialogContent,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import LinkButton from "@/components/ui/link-button";
 import { api } from "@/convex/_generated/api";
@@ -15,8 +22,8 @@ import { Id } from "@/convex/_generated/dataModel";
 import { toast } from "@/hooks/use-hooks";
 import { useConvexMutation } from "@/lib/convex-functions";
 import { cn } from "@/lib/utils";
-import { useQuery } from "convex/react";
-import { Check, MailPlus, Plus, Trash, X } from "lucide-react";
+import { useQuery } from "convex-helpers/react/cache";
+import { Check, Mail, MailPlus, Plus, Trash, X } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import z from "zod";
@@ -30,6 +37,7 @@ export default function InvitePage() {
     { id: crypto.randomUUID(), email: "" },
   ]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openExistingDialog, setOpenExistingDialog] = useState(false);
 
   const statusEmailData = useQuery(api.emails.getMinggleEmailStatus, {
     minggleId: params.id as Id<"minggle">,
@@ -37,6 +45,8 @@ export default function InvitePage() {
   const data = useQuery(api.minggle.getMinggle, {
     minggleId: params.id as Id<"minggle">,
   });
+  const emailList = useQuery(api.emailLists.getEmailLists);
+
   const { mutate, isPending } = useConvexMutation(api.minggle.inviteMinggle);
 
   const emailChecker = useMemo(() => {
@@ -95,17 +105,33 @@ export default function InvitePage() {
       </div>
       <div className="flex h-max items-center justify-between mb-3 mt-4">
         <h4 className="font-bold text-lg">Invite More</h4>
-        <Button
-          size="sm"
-          onClick={() =>
-            setInvites((invites) => [
-              ...invites,
-              { id: crypto.randomUUID(), email: "" },
-            ])
-          }
-        >
-          <MailPlus />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm">
+              <MailPlus />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem
+              onClick={() => setOpenExistingDialog(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus />
+              <span>Invite from existing list</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                setInvites((invites) => [
+                  ...invites,
+                  { id: crypto.randomUUID(), email: "" },
+                ])
+              }
+            >
+              <Plus />
+              <span>Invite new email</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <div>
         <div className="space-y-3">
@@ -164,6 +190,38 @@ export default function InvitePage() {
           </div>
         </DialogContent>
       </Dialog>
+      <ControlledDialog
+        open={openExistingDialog}
+        onOpenChange={setOpenExistingDialog}
+        title="Invite from existing list"
+      >
+        <div className="flex flex-col gap-2">
+          {emailList?.emails.map((email) => {
+            const isListed =
+              invites.some((invite) => invite.email === email) ||
+              data.emails.includes(email);
+            const onClick = () => {
+              if (isListed) return;
+              setInvites((invites) => [
+                ...invites,
+                { id: crypto.randomUUID(), email, exsist: true },
+              ]);
+            };
+            return (
+              <div
+                onClick={onClick}
+                className={cn(
+                  "flex p-2 font-semibold border rounded-md hover:ring ring-blue-500 items-center justify-between",
+                  isListed && "pointer-events-none opacity-50",
+                )}
+              >
+                {email}
+                {isListed && <Check />}
+              </div>
+            );
+          })}
+        </div>
+      </ControlledDialog>
     </div>
   );
 }
@@ -175,7 +233,7 @@ const EmailInput = ({
   setInvites,
 }: {
   invitedEmails: string[];
-  invite: { id: string; email: string };
+  invite: { id: string; email: string; exsist?: boolean };
   index: number;
   setInvites: React.Dispatch<
     React.SetStateAction<{ id: string; email: string }[]>
@@ -189,6 +247,7 @@ const EmailInput = ({
     <div className="flex gap-3 items-center">
       <div className="relative w-full">
         <Input
+          defaultValue={invite.exsist ? invite.email : undefined}
           type="email"
           placeholder="Email"
           key={invite.id}
@@ -221,6 +280,8 @@ const EmailInput = ({
       <div>
         <Button
           size={"icon"}
+          variant="outline"
+          className="hover:bg-red-500/25 hover:text-red-500/75"
           onClick={() =>
             setInvites((invites) =>
               invites.filter((data) => data.id !== invite.id),
