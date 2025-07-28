@@ -11,6 +11,8 @@
 import type * as auth from "../auth.js";
 import type * as constant from "../constant.js";
 import type * as emailLists from "../emailLists.js";
+import type * as emails_index from "../emails/index.js";
+import type * as emails_template_createMinggle from "../emails/template/createMinggle.js";
 import type * as emails from "../emails.js";
 import type * as helper from "../helper.js";
 import type * as http from "../http.js";
@@ -36,6 +38,8 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   constant: typeof constant;
   emailLists: typeof emailLists;
+  "emails/index": typeof emails_index;
+  "emails/template/createMinggle": typeof emails_template_createMinggle;
   emails: typeof emails;
   helper: typeof helper;
   http: typeof http;

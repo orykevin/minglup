@@ -6,6 +6,8 @@ import { authTables } from "@convex-dev/auth/server";
 // requires indexes defined on `authTables`.
 // The schema provides more precise TypeScript types.
 
+export const StatusEmailType = v.union(v.literal("failed"), v.literal("sent"), v.literal("delivered"), v.literal("cancelled"), v.literal("bounced"), v.literal("complained"), v.literal("clicked"), v.literal("delivered_delayed"))
+
 export const minggleTable = defineTable({
   address: v.string(),
   dateFrom: v.string(),
@@ -34,7 +36,7 @@ export const minggleEmail = defineTable({
   minggleRef: v.number(), // number to track edited minggle
   resendId: v.optional(v.string()),
   type: v.string(),
-  status: v.union(v.literal("failed"), v.literal("sent"), v.literal("delivered"), v.literal("cancelled"), v.literal("bounced"), v.literal("complained"), v.literal("clicked"), v.literal("delivered_delayed"))
+  status: StatusEmailType,
 }).index("byResendId", ["resendId"]).index("byMinggleId", ["minggleId", "minggleRef"]).index("byEmail", ['email', 'minggleId', 'minggleRef'])
 
 export default defineSchema({
