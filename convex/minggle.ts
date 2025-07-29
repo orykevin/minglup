@@ -28,6 +28,29 @@ export const getMinggle = query({
     }
 })
 
+export const getMinggleOverview = query({
+    args: {
+        invitedId: v.id("invitedPeople")
+    },
+    handler: async (ctx, { invitedId }) => {
+        const invitedData = await ctx.db.get(invitedId)
+        if (!invitedData) throw new ConvexError("Invite ID not found")
+
+        const minggleData = await ctx.db.get(invitedData.minggleId)
+        if (!minggleData) throw new ConvexError("Minggle data not found")
+        const { emails, ...safeData } = minggleData
+        const ownerData = await ctx.db.get(invitedData.ownerId)
+        if (!ownerData)
+            throw new ConvexError("Owner Data not found")
+
+        return {
+            invited: invitedData,
+            ownerData: { id: ownerData?._id, email: ownerData.email, imageUrl: ownerData.image },
+            minggleData: safeData
+        }
+    },
+})
+
 export const getActiveMinggle = query({
     handler: async (ctx) => {
         const userId = await isAuthUserId(ctx)
@@ -45,6 +68,15 @@ export const createMinggle = mutation({
         if (!minggleId) throw new ConvexError("Error when creating minggle")
         await addEmailListsHelper(ctx, userId, args.emails)
         await sendEmailHelper(ctx, { minggleId, emails: args.emails }, "create")
+
+        await Promise.all(args.emails.map(async (email) => {
+            return await ctx.db.insert("invitedPeople", {
+                email,
+                minggleId,
+                ownerId: userId,
+            })
+        }))
+
         return minggleId
     },
 })
@@ -85,6 +117,15 @@ export const inviteMinggle = mutation({
         })
         await addEmailListsHelper(ctx, userId, newEmails)
         await sendEmailHelper(ctx, { minggleId, emails: newEmails, minggleRef: (minggle.editCount || 0) }, "invited")
+
+        await Promise.all(newEmails.map(async (email) => {
+            return await ctx.db.insert("invitedPeople", {
+                email,
+                minggleId,
+                ownerId: userId,
+            })
+        }))
+
         return `Successfully add ${emails.length} email`
     }
 })

@@ -5,6 +5,7 @@ import timezone from "dayjs/plugin/timezone";
 import React, { useMemo } from "react";
 import { Clock, MapPin, User2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -40,8 +41,14 @@ export const MinggleCard = ({ data }: MinggleCardProps) => {
       tabIndex={0}
     >
       <div className="flex gap-3 items-center">
-        <div className="relative border p-3 pb-2 min-w-[100px] rounded-md">
-          <span className="absolute top-0 left-0 w-full h-2 bg-blue-400" />
+        <div className="relative border p-3 pb-2 min-w-[100px] rounded-[6px]">
+          <span
+            className={cn(
+              "absolute top-0 left-0 w-full h-2 bg-blue-400",
+              data.isCanceled && "bg-red-500",
+              data.isFinished && "bg-green-600",
+            )}
+          />
           {localDate.isDifferentDay && localDate.isDifferentMonth ? (
             <div className="flex items-center justify-center gap-2">
               <div>
@@ -76,7 +83,9 @@ export const MinggleCard = ({ data }: MinggleCardProps) => {
         <div className="flex -mt-1">
           <div className="h-full">
             <h3 className="text-lg font-semibold">{data.title}</h3>
-            <p className="text-primary/75 line-clamp-1">{data.description}</p>
+            <p className="text-foreground/75 line-clamp-1">
+              {data.description}
+            </p>
           </div>
         </div>
       </div>

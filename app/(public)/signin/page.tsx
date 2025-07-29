@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { GoogleIcon } from "@/icons/google";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 export default function SignIn() {
   const { signIn } = useAuthActions();
@@ -16,11 +15,11 @@ export default function SignIn() {
         <img src="/minggle-group.png" className="object-cover"></img>
       </div>
       <div className="w-full flex flex-col gap-4">
-        <p className="text-center text-primary/75">
+        <p className="text-center text-foreground/50">
           login to create your minggle
         </p>
         <Button
-          className="h-12 text-lg font-semibold"
+          className="h-12 text-lg font-semibold bg-black dark:bg-white text-background"
           onClick={() => signIn("google").then(() => router.push("/"))}
         >
           <GoogleIcon />

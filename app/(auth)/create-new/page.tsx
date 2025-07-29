@@ -42,11 +42,49 @@ const formSchema = z.object({
   dateFrom: z.date(),
   timezone: z.string(),
   emails: z
-    .array(z.object({ value: z.email("Invalid email"), label: z.string() }))
+    .array(
+      z.object({
+        value: z.email("Invalid email"),
+        label: z.string(),
+      }),
+    )
     .min(1, "At least one email is required"),
 });
 
 export default function CreateNewPage() {
+  const [openDialogMap, setOpenDialogMap] = useState(false);
+  const [openConfirmation, setOpenConfirmation] = useState(false);
+
+  const emailLists = useQuery(api.emailLists.getEmailLists);
+  const userData = useQuery(api.user.getProfile);
+
+  const onSubmitHandler = () => {
+    setOpenConfirmation(true);
+  };
+
+  const formSchema = z.object({
+    title: z.string().min(1, "Title is required"),
+    description: z.string(),
+    address: z.string().min(1, "Address is required"),
+    latlong: z.array(z.number()),
+    dateTo: z.date(),
+    dateFrom: z.date(),
+    timezone: z.string(),
+    emails: z
+      .array(
+        z.object({
+          value: z
+            .email("Invalid email")
+            .refine(
+              (email) => email !== userData?.email,
+              "You cannot invite yourself",
+            ),
+          label: z.string(),
+        }),
+      )
+      .min(1, "At least one email is required"),
+  });
+
   const forms = useForm({
     defaultValues: {
       title: "",
@@ -60,14 +98,6 @@ export default function CreateNewPage() {
     },
     resolver: zodResolver(formSchema),
   });
-  const [openDialogMap, setOpenDialogMap] = useState(false);
-  const [openConfirmation, setOpenConfirmation] = useState(false);
-
-  const emailLists = useQuery(api.emailLists.getEmailLists);
-
-  const onSubmitHandler = () => {
-    setOpenConfirmation(true);
-  };
 
   const setAddressFromMap = (address: string, latlong: number[]) => {
     forms.setValue("address", address);
