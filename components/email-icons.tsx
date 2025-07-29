@@ -24,7 +24,9 @@ const EmailIcon = ({ status }: { status: Doc<"minggleEmail">["status"] }) => {
   };
   return (
     <Tooltip>
-      <TooltipTrigger className="text-white">{renderIcon()}</TooltipTrigger>
+      <TooltipTrigger className="text-foreground">
+        {renderIcon()}
+      </TooltipTrigger>
       <TooltipContent className="capitalize">{status}</TooltipContent>
     </Tooltip>
   );

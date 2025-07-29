@@ -39,9 +39,19 @@ export const minggleEmail = defineTable({
   status: StatusEmailType,
 }).index("byResendId", ["resendId"]).index("byMinggleId", ["minggleId", "minggleRef"]).index("byEmail", ['email', 'minggleId', 'minggleRef'])
 
+export const invitedPeople = defineTable({
+  email: v.string(),
+  minggleId: v.id("minggle"),
+  ownerId: v.id('users'),
+  rank: v.optional(v.number()),
+  confirmedAt: v.optional(v.number()),
+  isFailed: v.optional(v.boolean())
+}).index("byEmail", ["email", "minggleId"]).index("byMinggle", ["minggleId"])
+
 export default defineSchema({
   ...authTables,
   minggle: minggleTable,
   emailLists: emailLists,
   minggleEmail,
+  invitedPeople
 });

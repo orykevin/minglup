@@ -55,14 +55,14 @@ export default function Home() {
             <div>
               <div className="space-y-3">
                 {activeMinggle?.map((minggle) => (
-                  <MinggleCard data={minggle} />
+                  <MinggleCard key={minggle._id} data={minggle} />
                 ))}
               </div>
               {(pastMinggle || []).length > 0 && (
                 <div className="mt-4 space-y-3">
                   <h4 className="text-xl font-bold mb-4">Your past minggle</h4>
                   {pastMinggle?.map((minggle) => (
-                    <MinggleCard data={minggle} />
+                    <MinggleCard key={minggle._id} data={minggle} />
                   ))}
                 </div>
               )}

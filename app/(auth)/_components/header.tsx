@@ -28,7 +28,7 @@ export const HeaderAuth = () => {
     <header className="bg-background p-4 border-b-2 border-slate-200 dark:border-slate-800 flex flex-row justify-between items-center">
       <h4
         onClick={() => router.push("/")}
-        className="flex gap-1 items-center text-primary-foreground font-bold cursor-pointer"
+        className="flex gap-1 items-center text-foreground font-bold cursor-pointer"
       >
         <MinggleIcon />
         MinglUp

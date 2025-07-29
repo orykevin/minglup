@@ -83,7 +83,7 @@ export const MinggleCard = ({ data }: MinggleCardProps) => {
         <div className="flex -mt-1">
           <div className="h-full">
             <h3 className="text-lg font-semibold">{data.title}</h3>
-            <p className="text-primary-foreground/50 line-clamp-1">
+            <p className="text-foreground/75 line-clamp-1">
               {data.description}
             </p>
           </div>

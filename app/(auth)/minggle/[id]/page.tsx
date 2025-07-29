@@ -145,7 +145,7 @@ export default function MingglePage() {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold">{data?.title}</h1>
-          <p className="text-primary-foreground/95">{data?.description}</p>
+          <p className="text-foreground/75">{data?.description}</p>
         </div>
       </div>
       <div className="space-y-3">
@@ -158,7 +158,7 @@ export default function MingglePage() {
             {!localDate?.isDifferentDay &&
               " - " + localDate?.to.format("HH:mm")}
           </p>
-          <span className="text-sm text-primary-foreground/75">
+          <span className="text-sm text-foreground/75">
             {`${localDate?.sourceFrom.format("YYYY-MM-DD, HH:mm")}
             ${
               !localDate?.isDifferentDay
@@ -176,7 +176,7 @@ export default function MingglePage() {
             <p className="text-xl font-semibold">
               {localDate?.to.format("dddd, DD-MM-YYYY, HH:mm")}
             </p>
-            <span className="text-sm text-primary-foreground/75">{`
+            <span className="text-sm text-foreground/75">{`
             ${localDate?.from.format("DD-MM-YYYY, HH:mm")}
             (GMT${(localDate?.timezone?.offset || 0) > 0 ? "+" : ""}${localDate?.timezone?.offset})`}</span>
           </div>
@@ -186,7 +186,9 @@ export default function MingglePage() {
         <div className="absolute -top-3 -left-1 flex gap-1 items-center p-1 px-2 bg-primary test-xs text-primary-foreground rounded-md">
           <MapPin size={16} /> <p className="text-xs font-semibold">Location</p>
         </div>
-        <p className="text-lg font-semibold rounded-md mb-2">{data.address}</p>
+        <p className="text-lg font-semibold rounded-md mb-2 px-1">
+          {data.address}
+        </p>
         <div className="relative w-full">
           {data.latlong.length > 0 && (
             <MapContainer

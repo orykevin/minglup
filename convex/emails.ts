@@ -126,6 +126,13 @@ export const mutateMinggleEmail = internalMutation({
         resendId: v.optional(v.string())
     },
     handler: async (ctx, args) => {
+        if (args.status === "failed") {
+            const invited = await ctx.db.query("invitedPeople").withIndex("byEmail", (q) => q.eq("email", args.email).eq("minggleId", args.minggleId)).first()
+            if (!invited) return;
+            await ctx.db.patch(invited._id, {
+                isFailed: true,
+            })
+        }
         await ctx.db.insert("minggleEmail", { ...args })
     },
 })

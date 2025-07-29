@@ -45,6 +45,7 @@ export default function InvitePage() {
   const data = useQuery(api.minggle.getMinggle, {
     minggleId: params.id as Id<"minggle">,
   });
+  const userData = useQuery(api.user.getProfile);
   const emailList = useQuery(api.emailLists.getEmailLists);
 
   const { mutate, isPending } = useConvexMutation(api.minggle.inviteMinggle);
@@ -53,7 +54,8 @@ export default function InvitePage() {
     return invites.map((invite) => {
       const isValidEmail = emailSchema.safeParse(invite.email);
       const isExist = data?.emails.includes(invite.email);
-      return isValidEmail.success && !isExist;
+      const isNotUserEmail = userData?.email === invite.email;
+      return isValidEmail.success && !isExist && isNotUserEmail;
     });
   }, [invites]);
 
@@ -142,6 +144,7 @@ export default function InvitePage() {
               invite={invite}
               index={index}
               setInvites={setInvites}
+              userEmail={userData?.email}
             />
           ))}
         </div>
@@ -156,7 +159,7 @@ export default function InvitePage() {
           <Button
             onClick={() => setOpenDialog(true)}
             className="flex-1"
-            disabled={!emailChecker.every(Boolean)}
+            disabled={!emailChecker.every(Boolean) || invites.length < 1}
           >
             Submit
           </Button>
@@ -231,6 +234,7 @@ const EmailInput = ({
   invite,
   index,
   setInvites,
+  userEmail,
 }: {
   invitedEmails: string[];
   invite: { id: string; email: string; exsist?: boolean };
@@ -238,9 +242,12 @@ const EmailInput = ({
   setInvites: React.Dispatch<
     React.SetStateAction<{ id: string; email: string }[]>
   >;
+  userEmail?: string;
 }) => {
   const isExist = invitedEmails.includes(invite.email);
-  const isValidEmail = emailSchema.safeParse(invite.email).success && !isExist;
+  const isNotUserEmail = invite.email !== userEmail;
+  const isValidEmail =
+    emailSchema.safeParse(invite.email).success && !isExist && isNotUserEmail;
   const isEmpty = invite.email === "";
 
   return (
