@@ -15,6 +15,8 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { User2 } from "lucide-react";
+import MinggleIcon from "@/icons/minggleIcon";
 
 export const HeaderAuth = () => {
   const { isAuthenticated } = useConvexAuth();
@@ -24,13 +26,21 @@ export const HeaderAuth = () => {
   const userData = useQueryCache(api.user.getProfile);
   return (
     <header className="bg-background p-4 border-b-2 border-slate-200 dark:border-slate-800 flex flex-row justify-between items-center">
-      <h4 onClick={() => router.push("/")}>MinglUp</h4>
+      <h4
+        onClick={() => router.push("/")}
+        className="flex gap-1 items-center text-primary-foreground font-bold cursor-pointer"
+      >
+        <MinggleIcon />
+        MinglUp
+      </h4>
       {isAuthenticated ? (
         <DropdownMenu>
           <DropdownMenuTrigger>
             <Avatar>
-              <AvatarImage src="https://github.com/shadcn.png" />
-              <AvatarFallback>CN</AvatarFallback>
+              <AvatarImage src={userData?.image ?? ""} />
+              <AvatarFallback>
+                <User2 />
+              </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent>

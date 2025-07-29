@@ -12,7 +12,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
   const router = useRouter();
-  const activeMinggle = useQuery(api.minggle.getActiveMinggle, {});
+  const allMinggle = useQuery(api.minggle.getActiveMinggle, {});
+
+  const activeMinggle = allMinggle?.filter(
+    (minggle) => !minggle.isFinished && !minggle.isCanceled,
+  );
+  const pastMinggle = allMinggle?.filter(
+    (minggle) => minggle.isFinished || minggle.isCanceled,
+  );
 
   const onClickCreate = () => {
     router.push("/create-new");
@@ -21,14 +28,14 @@ export default function Home() {
   return (
     <div className="flex flex-col">
       <div className="w-full h-full">
-        <div className="flex justify-between">
-          <h4 className="text-2xl font-semibold">Your active minggle</h4>
+        <div className="flex justify-between items-center">
+          <h4 className="text-xl font-bold">Your active minggle</h4>
           <Button size="icon" onClick={onClickCreate}>
             <Plus strokeWidth={3} />
           </Button>
         </div>
         <div className="space-y-3 mt-4">
-          {activeMinggle === undefined ? (
+          {allMinggle === undefined ? (
             <div className="space-y-3">
               {[...new Array(3)].map((_, index) => (
                 <Skeleton className="w-full h-44" key={index}>
@@ -44,8 +51,22 @@ export default function Home() {
                 </Skeleton>
               ))}
             </div>
-          ) : activeMinggle.length > 0 ? (
-            activeMinggle.map((minggle) => <MinggleCard data={minggle} />)
+          ) : allMinggle.length > 0 ? (
+            <div>
+              <div className="space-y-3">
+                {activeMinggle?.map((minggle) => (
+                  <MinggleCard data={minggle} />
+                ))}
+              </div>
+              {(pastMinggle || []).length > 0 && (
+                <div className="mt-4 space-y-3">
+                  <h4 className="text-xl font-bold mb-4">Your past minggle</h4>
+                  {pastMinggle?.map((minggle) => (
+                    <MinggleCard data={minggle} />
+                  ))}
+                </div>
+              )}
+            </div>
           ) : (
             <EmptyPlaceholder
               className="mt-20"

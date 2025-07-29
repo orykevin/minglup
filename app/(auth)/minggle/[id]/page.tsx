@@ -8,7 +8,15 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { useMemo, useState } from "react";
 import { timezoneList } from "@/lib/timezones";
-import { EllipsisVertical, MapPin, Pencil, Plus, User2, X } from "lucide-react";
+import {
+  Clock,
+  EllipsisVertical,
+  MapPin,
+  Pencil,
+  Plus,
+  User2,
+  X,
+} from "lucide-react";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import { LatLngExpression } from "leaflet";
 import { customIcon, FlyToLocation } from "@/components/maps/searchable-map";
@@ -90,12 +98,12 @@ export default function MingglePage() {
   if (!data) return <SkeletonMinggleInfo />;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="w-full flex justify-between items-center mb-1">
         <Badge
           variant={data.isCanceled ? "destructive" : "default"}
           className={cn(
-            "mb-3 text-primary",
+            "mb-3 text-primary-foreground",
             data.isFinished ? "bg-green-600" : "bg-blue-500",
           )}
         >
@@ -137,18 +145,20 @@ export default function MingglePage() {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold">{data?.title}</h1>
-          <p className="text-primary/95">{data?.description}</p>
+          <p className="text-primary-foreground/95">{data?.description}</p>
         </div>
       </div>
       <div className="space-y-3">
-        <div className="border rounded-sm p-2 px-3">
-          <p>From</p>
+        <div className="relative border rounded-sm p-2 pt-4 px-3 bg-card">
+          <div className="absolute -top-3 -left-1 flex gap-1 items-center p-1 px-2 bg-primary test-xs text-primary-foreground rounded-md">
+            <Clock size={16} /> <p className="text-xs font-semibold">From</p>
+          </div>
           <p className="text-xl font-semibold">
             {localDate?.from.format("dddd, DD-MM-YYYY, HH:mm")}
             {!localDate?.isDifferentDay &&
               " - " + localDate?.to.format("HH:mm")}
           </p>
-          <span className="text-sm text-primary/95">
+          <span className="text-sm text-primary-foreground/75">
             {`${localDate?.sourceFrom.format("YYYY-MM-DD, HH:mm")}
             ${
               !localDate?.isDifferentDay
@@ -159,21 +169,23 @@ export default function MingglePage() {
           </span>
         </div>
         {localDate?.isDifferentDay && (
-          <div className="border rounded-sm p-2 px-3">
-            <p>To</p>
+          <div className="relative border rounded-sm p-2 pt-4 px-3 bg-card mt-5">
+            <div className="absolute -top-3 -left-1 flex gap-1 items-center p-1 px-2 bg-primary test-xs text-primary-foreground rounded-md">
+              <Clock size={16} /> <p className="text-xs font-semibold">To</p>
+            </div>
             <p className="text-xl font-semibold">
               {localDate?.to.format("dddd, DD-MM-YYYY, HH:mm")}
             </p>
-            <span className="text-sm text-primary/95">{`
+            <span className="text-sm text-primary-foreground/75">{`
             ${localDate?.from.format("DD-MM-YYYY, HH:mm")}
             (GMT${(localDate?.timezone?.offset || 0) > 0 ? "+" : ""}${localDate?.timezone?.offset})`}</span>
           </div>
         )}
       </div>
-      <div className="space-y-1 border p-2 rounded-md">
-        <p className="flex gap-1 items-center">
-          <MapPin size={18} /> Location{" "}
-        </p>
+      <div className="relative space-y-1 border p-2 pt-4 rounded-md bg-card">
+        <div className="absolute -top-3 -left-1 flex gap-1 items-center p-1 px-2 bg-primary test-xs text-primary-foreground rounded-md">
+          <MapPin size={16} /> <p className="text-xs font-semibold">Location</p>
+        </div>
         <p className="text-lg font-semibold rounded-md mb-2">{data.address}</p>
         <div className="relative w-full">
           {data.latlong.length > 0 && (
@@ -200,17 +212,18 @@ export default function MingglePage() {
           )}
         </div>
       </div>
-      <div className="space-y-1 border p-2 rounded-md">
-        <p className="flex gap-1 items-center">
-          <User2 size={18} /> Invited people
-        </p>
+      <div className="relative space-y-1 border p-2 pt-6 rounded-md bg-card">
+        <div className="absolute -top-3 -left-1 flex gap-1 items-center p-1 px-2 bg-primary test-xs text-primary-foreground rounded-md">
+          <User2 size={18} />{" "}
+          <p className="text-xs font-semibold">Invited people</p>
+        </div>
         <div className="space-y-2">
           {data.emails.map((email) => {
             const emailStatus = statusEmailData?.find(
               (e) => e?.email === email,
             );
             return (
-              <div className="flex justify-between items-center p-3 border rounded-md">
+              <div className="flex justify-between items-center p-3 px-4 border rounded-md bg-primary/15">
                 <p className="text-lg font-semibold" key={email}>
                   {email}
                 </p>
