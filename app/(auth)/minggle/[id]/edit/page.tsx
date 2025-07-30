@@ -117,8 +117,8 @@ export default function EditMingglePage() {
         onSubmitHandler={onSubmitHandler}
         className="space-y-3"
       >
-        <TextFormInput name="title" label="Title" isRequired />
-        <TextareaFormInput name="description" label="Description" />
+        <TextFormInput name="title" label="Title" isRequired max={100} />
+        <TextareaFormInput name="description" label="Description" max={1000} />
         <div className="relative">
           <TextFormInput name="address" label="Address" isRequired />
           {latlongValue.length > 0 ? (

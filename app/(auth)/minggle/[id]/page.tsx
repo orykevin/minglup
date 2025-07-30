@@ -56,6 +56,9 @@ export default function MingglePage() {
   const data = useQuery(api.minggle.getMinggle, {
     minggleId: params.id as Id<"minggle">,
   });
+  const confirmedInvite = useQuery(api.invitedPeople.getConfirmed, {
+    minggleId: params.id as Id<"minggle">,
+  });
   const userData = useQuery(api.user.getProfile);
   const { mutate: cancelMinggle, isPending: isCanceling } = useConvexMutation(
     api.minggle.cancelMinggle,
@@ -89,6 +92,8 @@ export default function MingglePage() {
       isDifferentMonth,
     };
   }, [data]);
+
+  console.log(confirmedInvite);
 
   const isCanEdit = useMemo(() => {
     if (!data) return false;
@@ -159,7 +164,7 @@ export default function MingglePage() {
               " - " + localDate?.to.format("HH:mm")}
           </p>
           <span className="text-sm text-foreground/75">
-            {`${localDate?.sourceFrom.format("YYYY-MM-DD, HH:mm")}
+            {`${localDate?.sourceFrom.format("DD-MM-YYYY, HH:mm")}
             ${
               !localDate?.isDifferentDay
                 ? " - " + localDate?.sourceTo.format("HH:mm")
@@ -177,7 +182,7 @@ export default function MingglePage() {
               {localDate?.to.format("dddd, DD-MM-YYYY, HH:mm")}
             </p>
             <span className="text-sm text-foreground/75">{`
-            ${localDate?.from.format("DD-MM-YYYY, HH:mm")}
+            ${localDate?.to.format("DD-MM-YYYY, HH:mm")}
             (GMT${(localDate?.timezone?.offset || 0) > 0 ? "+" : ""}${localDate?.timezone?.offset})`}</span>
           </div>
         )}
@@ -220,19 +225,34 @@ export default function MingglePage() {
           <p className="text-xs font-semibold">Invited people</p>
         </div>
         <div className="space-y-2">
-          {data.emails.map((email) => {
-            const emailStatus = statusEmailData?.find(
-              (e) => e?.email === email,
-            );
-            return (
-              <div className="flex justify-between items-center p-3 px-4 border rounded-md bg-primary/15">
-                <p className="text-lg font-semibold" key={email}>
-                  {email}
-                </p>
-                <EmailIcon status={emailStatus?.status || "sent"} />
-              </div>
-            );
-          })}
+          {data.emails
+            .sort((email1, email2) => {
+              const email1Rank =
+                confirmedInvite?.find((e) => e.email === email1)?.rank || 0;
+              const email2Rank =
+                confirmedInvite?.find((e) => e.email === email2)?.rank || 0;
+
+              return email2Rank - email1Rank;
+            })
+            .map((email) => {
+              const emailStatus = statusEmailData?.find(
+                (e) => e?.email === email,
+              );
+              const invited = confirmedInvite?.find((e) => e.email === email);
+              return (
+                <div
+                  className={cn(
+                    "flex justify-between items-center p-3 px-4 border rounded-md bg-primary/15",
+                    invited && "bg-primary",
+                  )}
+                >
+                  <p className="text-lg font-semibold" key={email}>
+                    {invited?.rank ? `#${invited.rank}` : ""} {email}
+                  </p>
+                  <EmailIcon status={emailStatus?.status || "sent"} />
+                </div>
+              );
+            })}
         </div>
       </div>
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>

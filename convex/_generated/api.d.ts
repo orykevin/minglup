@@ -16,6 +16,7 @@ import type * as emails_template_createMinggle from "../emails/template/createMi
 import type * as emails from "../emails.js";
 import type * as helper from "../helper.js";
 import type * as http from "../http.js";
+import type * as invitedPeople from "../invitedPeople.js";
 import type * as middleware from "../middleware.js";
 import type * as minggle from "../minggle.js";
 import type * as user from "../user.js";
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   emails: typeof emails;
   helper: typeof helper;
   http: typeof http;
+  invitedPeople: typeof invitedPeople;
   middleware: typeof middleware;
   minggle: typeof minggle;
   user: typeof user;

@@ -24,7 +24,7 @@ export const toast = (options: ToastOptions) => {
     return (
       <div
         className={cn(
-          "relative gap-4 flex items-center border p-2 pb-2 pt-1.5 pr-12 rounded-[8px] !text-primary",
+          "relative gap-4 flex items-center border p-2 pb-2 pt-1.5 pr-12 rounded-[8px] !text-foreground",
           backgroundVariant[variant || "default"],
         )}
       >

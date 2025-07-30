@@ -78,8 +78,13 @@ export default function OverviewPage() {
   return (
     <main className="p-2 pt-4 flex flex-col gap-3 mx-auto max-w-2xl">
       <h1 className="text-4xl font-bold text-center text-primary">
-        You're Invited
+        {data.invited.rank ? "You're Confirmed" : "You're Invited"}
       </h1>
+      {data.invited.rank && (
+        <h4 className="text-lg text-foreground/75 text-center -mt-2">
+          You're ranked #{data.invited.rank}
+        </h4>
+      )}
 
       <div className="space-y-6">
         <div className="w-full flex justify-between items-center my-3 border-y border-foreground/10 py-3">
