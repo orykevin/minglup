@@ -6,7 +6,7 @@ import { Doc, Id } from "./_generated/dataModel";
 import { getMinggleData } from "./minggle";
 import { StatusEmailType } from "./schema";
 
-type SendEmailType = "create" | "edit" | "invited" | "cancel"
+type SendEmailType = "create" | "edit" | "invited" | "cancel" | "info" | "confirmed"
 
 export const resend: Resend = new Resend(components.resend, {
     onEmailEvent: internal.emails.handleEmailEvent,
@@ -85,34 +85,11 @@ export const sendEmailHelper = async (ctx: MutationCtx, args: { emails: string[]
             break;
     }
     args.emails.forEach(async (email) => {
-        const previousEmail = await ctx.db.query("minggleEmail").withIndex("byEmail", (q) => q.eq("email", email).eq("minggleId", args.minggleId)).first()
-        if (previousEmail?.status === "failed") return;
+        const lastTwoStatus = await ctx.db.query("minggleEmail").withIndex("byEmail", (q) => q.eq("email", email).eq("minggleId", args.minggleId)).take(2)
+        // const previousEmail = lastTwoStatus[0]
+        const isLastEmailNotAvailable = lastTwoStatus.some((email) => email.status === "bounced" || email.status === "cancelled" || email.status === "failed")
+        if (isLastEmailNotAvailable) return;
         await ctx.scheduler.runAfter(0, internal.emails.index.sendCustomEmail, { email, type, minggleId: args.minggleId, minggleRef: (args.minggleRef || 0) })
-        // try {
-        //     const resendId = await resend.sendEmail(ctx, {
-        //         from: "MinglUp <testuser@oryworks.com>",
-        //         to: email,
-        //         subject: html,
-        //         html
-        //     })
-        //     await ctx.db.insert("minggleEmail", {
-        //         email,
-        //         minggleId: args.minggleId,
-        //         minggleRef: args.minggleRef || 0,
-        //         resendId: resendId,
-        //         status: "sent",
-        //         type
-        //     })
-        // } catch (e) {
-        //     console.log(e)
-        //     await ctx.db.insert("minggleEmail", {
-        //         email,
-        //         minggleId: args.minggleId,
-        //         minggleRef: args.minggleRef || 0,
-        //         status: "failed",
-        //         type
-        //     })
-        // }
     })
 }
 

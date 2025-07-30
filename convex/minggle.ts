@@ -4,8 +4,13 @@ import { isAuthUserId, isMinggleOwner } from "./middleware";
 import { addEmailListsHelper } from "./emailLists";
 import { Doc, Id } from "./_generated/dataModel";
 import { sendEmailHelper } from "./emails";
-import { MAX_EDIT_COUNT } from "./constant";
+import { MAX_EDIT_COUNT, MIN_HOUR_BEFORE_CONFIRM } from "./constant";
 import dayjs from "dayjs"
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
 const minggleArgs = {
     address: v.string(),
@@ -156,6 +161,31 @@ export const getMinggleData = async (ctx: MutationCtx | QueryCtx, minggleId: Id<
 }
 
 export const isMinggleAvailable = (minggleData: Doc<"minggle">) => {
-    const isEnoughTime = dayjs(minggleData.dateTo).valueOf() - Date.now() > (6 * 60 * 60 * 1000)
+    const isEnoughTime = dayjs.utc(minggleData.dateTo).valueOf() - Date.now() > (MIN_HOUR_BEFORE_CONFIRM * 60 * 60 * 1000)
     return (!minggleData.isCanceled && !minggleData.isFinished && isEnoughTime)
 }
+
+export const isAvailableToConfirm = (minggleData: Doc<"minggle">) => {
+    const dateFromMs = dayjs.utc(minggleData.dateFrom).valueOf();
+    const dateToMs = dayjs.utc(minggleData.dateTo).valueOf();
+    const now = Date.now();
+    const isMinTime = (dateFromMs - now) <= (MIN_HOUR_BEFORE_CONFIRM * 60 * 60 * 1000);
+    const isMaxTime = (dateToMs - now) <= 0
+    const isConfrimTime = isMinTime && !isMaxTime
+
+    // console.log("from : ", dayjs.utc(minggleData.dateFrom).format(), "to : ", dayjs.utc(minggleData.dateTo).format(), "current : ", dayjs().format())
+    // console.log("different from : ", dateFromMs - now, "different to : ", dateToMs - now, "min different time : ", (MIN_HOUR_BEFORE_CONFIRM * 60 * 60 * 1000))
+
+    return (!minggleData.isCanceled && !minggleData.isFinished && isConfrimTime)
+}
+
+export const testMinggle = query({
+    args: {
+        minggleId: v.id("minggle")
+    },
+    handler: async (ctx, args) => {
+        const minggleData = await ctx.db.get(args.minggleId)
+        if (!minggleData) return
+        return isAvailableToConfirm(minggleData)
+    },
+})
