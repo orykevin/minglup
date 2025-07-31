@@ -232,7 +232,7 @@ export default function OverviewPage() {
 
 const SkeletonMinggleOverview = () => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-2xl mx-auto">
       <Skeleton className="w-3/4 h-10 mx-auto" />
       <div className="flex items-center gap-2 justify-center">
         <Skeleton className="w-8 h-8 rounded-full" />

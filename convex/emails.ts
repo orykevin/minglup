@@ -11,6 +11,7 @@ type SendEmailType = "create" | "edit" | "invited" | "cancel" | "info" | "confir
 
 export const resend: Resend = new Resend(components.resend, {
     onEmailEvent: internal.emails.handleEmailEvent,
+    testMode: false
 });
 
 export const getMinggleEmailLogs = query({
@@ -87,21 +88,6 @@ export const handleSendOnCreateMinggle = internalMutation({
 })
 
 export const sendEmailHelper = async (ctx: MutationCtx, args: { emails: string[], minggleId: Id<"minggle">, minggleRef?: number }, type: SendEmailType) => {
-    let html = ""
-    switch (type) {
-        case 'create':
-            html = "Created and you're invited"
-            break;
-        case 'cancel':
-            html = "Event cancelled"
-            break;
-        case 'edit':
-            html = "Event edited"
-            break;
-        case 'invited':
-            html = "You're Invited"
-            break;
-    }
     args.emails.forEach(async (email) => {
         const lastTwoStatus = await ctx.db.query("minggleEmail").withIndex("byEmail", (q) => q.eq("email", email).eq("minggleId", args.minggleId)).take(2)
         // const previousEmail = lastTwoStatus[0]

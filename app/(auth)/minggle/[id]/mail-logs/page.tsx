@@ -9,6 +9,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
@@ -39,14 +40,12 @@ export default function MailPage() {
 
   const data = useQuery(api.emails.getMinggleEmailLogs, { minggleId });
 
-  if (data === undefined) return <div>Loading...</div>;
+  if (data === undefined) return <SkeletonMailLogs />;
 
   if (data === null) {
     router.push("/");
     return <div>Back to home...</div>;
   }
-
-  data.allLogs[0].type;
 
   return (
     <div className="space-y-4">
@@ -165,3 +164,22 @@ export default function MailPage() {
     </div>
   );
 }
+
+const SkeletonMailLogs = () => {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <Skeleton className="w-32 h-8" />
+        <div className="flex gap-1">
+          <Skeleton className="w-24 h-8" />
+          <Skeleton className="w-24 h-8" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        {[...new Array(8)].map(() => (
+          <Skeleton className="w-full h-14" />
+        ))}
+      </div>
+    </div>
+  );
+};

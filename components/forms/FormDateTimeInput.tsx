@@ -167,7 +167,6 @@ export function FormDateTimeInput({
             step="60"
             defaultValue="00:00"
             value={timeTo}
-            min={timeFrom}
             onChange={(e) => {
               if (e.target.value < timeFrom && dateTo === dateFrom) {
                 setTimeTo(timeFrom);
