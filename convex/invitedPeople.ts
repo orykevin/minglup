@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalQuery, mutation, query } from "./_generated/server";
 import { isMinggleOwner } from "./middleware";
 import { sendEmailHelper } from "./emails";
 import { isAvailableToConfirm } from "./minggle";
@@ -43,4 +43,28 @@ export const getConfirmed = query({
         const allInvited = await ctx.db.query("invitedPeople").withIndex("byMinggle", (q) => q.eq("minggleId", args.minggleId)).collect()
         return allInvited.filter((invited) => invited.rank)
     },
+})
+
+export const getInvitedData = internalQuery({
+    args: {
+        email: v.string(),
+        type: v.string(),
+        minggleId: v.id("minggle"),
+    },
+    handler: async (ctx, args) => {
+        const invitedPeople = await ctx.db.query("invitedPeople").withIndex("byEmail", (q) => q.eq("email", args.email).eq("minggleId", args.minggleId)).first();
+        const minggleData = await ctx.db.get(args.minggleId)
+        if (!invitedPeople || !minggleData) {
+            throw new ConvexError("Data not found")
+        }
+        const user = (args.type === "create" || args.type === "invited") ? await ctx.db.get(minggleData.userId) : null
+        const allInvitedPeople = args.type === "" ? await ctx.db.query("invitedPeople").withIndex("byMinggle", (q) => q.eq("minggleId", args.minggleId)).collect() : null
+
+        return {
+            invitedPeople,
+            minggleData,
+            user,
+            allInvitedPeople,
+        }
+    }
 })

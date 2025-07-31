@@ -1,23 +1,26 @@
 import { CustomButton, HTMLWrapper, PlaceHolder } from "./component";
 
-export default function EmailCreateMinggle({
-  invitedBy,
+export default function EmailEditedMinggle({
   invitedId,
+  minggleRef,
 }: {
-  invitedBy: string;
   invitedId: string;
+  minggleRef: number;
 }) {
   return (
     <HTMLWrapper>
       <PlaceHolder
-        title="You're invited"
-        description={`invited by: ${invitedBy}`}
-        img="https://pub-19ec6f30c4404c10bdc8b5ffc96f6505.r2.dev/group-1.png"
+        title={
+          minggleRef > 1
+            ? `Minggle event update #${minggleRef}`
+            : "Minggle event updated"
+        }
+        img="https://pub-19ec6f30c4404c10bdc8b5ffc96f6505.r2.dev/marked.png"
       >
         <CustomButton
           href={`${process.env.SITE_URL}/minggle-overview/${invitedId}`}
         >
-          See Invitation
+          See Minggle
         </CustomButton>
       </PlaceHolder>
     </HTMLWrapper>

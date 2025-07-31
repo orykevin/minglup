@@ -19,11 +19,12 @@ import { Input } from "@/components/ui/input";
 import LinkButton from "@/components/ui/link-button";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { MAX_INVITED_PEOPLE } from "@/convex/constant";
 import { toast } from "@/hooks/use-hooks";
 import { useConvexMutation } from "@/lib/convex-functions";
 import { cn } from "@/lib/utils";
 import { useQuery } from "convex-helpers/react/cache";
-import { Check, Mail, MailPlus, Plus, Trash, X } from "lucide-react";
+import { Check, MailPlus, Plus, Trash, X } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import z from "zod";
@@ -55,7 +56,7 @@ export default function InvitePage() {
       const isValidEmail = emailSchema.safeParse(invite.email);
       const isExist = data?.emails.includes(invite.email);
       const isNotUserEmail = userData?.email === invite.email;
-      return isValidEmail.success && !isExist && isNotUserEmail;
+      return isValidEmail.success && !isExist && !isNotUserEmail;
     });
   }, [invites]);
 
@@ -86,6 +87,9 @@ export default function InvitePage() {
       },
     );
   };
+
+  const maximumExceed =
+    invites.length + (data?.emails.length || 0) > MAX_INVITED_PEOPLE;
 
   if (data === undefined) return <div>Loading...</div>;
 
@@ -148,6 +152,11 @@ export default function InvitePage() {
             />
           ))}
         </div>
+        {maximumExceed && (
+          <p className="text-red-500 font-semibold mt-3">
+            You can invite maximum {MAX_INVITED_PEOPLE} people
+          </p>
+        )}
         <div className="flex gap-3 mt-8">
           <LinkButton
             className="flex-1"
@@ -159,7 +168,11 @@ export default function InvitePage() {
           <Button
             onClick={() => setOpenDialog(true)}
             className="flex-1"
-            disabled={!emailChecker.every(Boolean) || invites.length < 1}
+            disabled={
+              !emailChecker.every(Boolean) ||
+              invites.length < 1 ||
+              maximumExceed
+            }
           >
             Submit
           </Button>

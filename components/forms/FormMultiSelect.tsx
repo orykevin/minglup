@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useFormContext, useFormState } from "react-hook-form";
 import { Label } from "./FormWrapper";
 import { useMemo } from "react";
+import { MAX_INVITED_PEOPLE } from "@/convex/constant";
 
 interface MultiSelectProps extends React.InputHTMLAttributes<HTMLDivElement> {
   label?: string;
@@ -81,6 +82,7 @@ export const FormMultiSelect = ({
         onChange={(options) => setValue(name, options)}
         value={selectedEmail}
         addText={addText}
+        maxSelected={MAX_INVITED_PEOPLE}
       />
       {displayError && errorFileds && errorFileds.index.length > 0 && (
         <p className="text-red-500">
