@@ -11,6 +11,7 @@ import { timezoneList } from "@/lib/timezones";
 import {
   Clock,
   EllipsisVertical,
+  Mails,
   MapPin,
   Pencil,
   Plus,
@@ -125,6 +126,12 @@ export default function MingglePage() {
                 <EllipsisVertical />
               </DropdownMenuTrigger>
               <DropdownMenuContent>
+                <DropdownMenuItem
+                  onClick={() => router.push(`/minggle/${data._id}/mail-logs`)}
+                >
+                  <Mails />
+                  <p>See Mail logs</p>
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled={isCanEdit}
                   onClick={() => router.push(`/minggle/${data._id}/edit`)}

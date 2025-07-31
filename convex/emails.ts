@@ -5,12 +5,30 @@ import { ConvexError, v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
 import { getMinggleData } from "./minggle";
 import { StatusEmailType } from "./schema";
+import { isAuthUserId, isMinggleOwner } from "./middleware";
 
 type SendEmailType = "create" | "edit" | "invited" | "cancel" | "info" | "confirmed"
 
 export const resend: Resend = new Resend(components.resend, {
     onEmailEvent: internal.emails.handleEmailEvent,
 });
+
+export const getMinggleEmailLogs = query({
+    args: {
+        minggleId: v.id("minggle")
+    }, handler: async (ctx, { minggleId }) => {
+        const userId = await isAuthUserId(ctx)
+        const minggle = await ctx.db.get(minggleId)
+
+        if (!minggle || minggle.userId !== userId) return null
+
+        const allLogs = await ctx.db.query("minggleEmail").withIndex("byMinggleId", (q) => q.eq("minggleId", minggle._id)).order("desc").collect();
+        return {
+            minggle,
+            allLogs,
+        }
+    },
+})
 
 export const getMinggleEmailStatus = query({
     args: {
