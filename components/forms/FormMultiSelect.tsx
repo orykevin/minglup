@@ -32,19 +32,15 @@ type MultipleErrorField = {
 
 export const FormMultiSelect = ({
   label,
-  type = "text",
   name,
-  className,
   fieldClassName,
   displayError = true,
   isRequired,
   tooltip,
   addText,
   options,
-  customErrorMessage,
-  ...props
 }: MultiSelectProps) => {
-  const { control, setValue, watch } = useFormContext();
+  const { setValue, watch } = useFormContext();
   const { errors } = useFormState({ name });
 
   const multipleFieldError = useMemo(
@@ -54,7 +50,7 @@ export const FormMultiSelect = ({
 
   const errorFileds = useMemo(() => {
     if (!multipleFieldError || !multipleFieldError.length) return undefined;
-    let index: number[] = [];
+    const index: number[] = [];
     let errorMessage: string = "";
     multipleFieldError.forEach((error, i) => {
       index.push(i + 1);

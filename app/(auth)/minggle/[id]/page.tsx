@@ -264,6 +264,7 @@ export default function MingglePage() {
               const invited = confirmedInvite?.find((e) => e.email === email);
               return (
                 <div
+                  key={email}
                   className={cn(
                     "flex justify-between items-center p-3 px-4 border rounded-md bg-primary/15",
                     invited && "bg-primary",

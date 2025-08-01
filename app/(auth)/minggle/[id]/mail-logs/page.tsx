@@ -125,6 +125,7 @@ export default function MailPage() {
             const status = mailLog.status;
             return (
               <div
+                key={mailLog._id}
                 className={cn(
                   "flex justify-between items-center py-2 px-4 border rounded-md bg-foreground/15",
                   (status === "delivered" || status === "clicked") &&
@@ -176,8 +177,8 @@ const SkeletonMailLogs = () => {
         </div>
       </div>
       <div className="space-y-2">
-        {[...new Array(8)].map(() => (
-          <Skeleton className="w-full h-14" />
+        {[...new Array(8)].map((_, i) => (
+          <Skeleton key={i} className="w-full h-14" />
         ))}
       </div>
     </div>

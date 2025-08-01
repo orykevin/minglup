@@ -118,7 +118,11 @@ export function FormDateTimeInput({
             id="time-picker"
             step="60"
             defaultValue="00:00"
-            min={dayjs().add(MIN_HOUR_BEFORE_CONFIRM, "hour").format("HH:mm")}
+            min={
+              dayjs(dateFrom).isSame(dayjs(), "day")
+                ? dayjs().add(MIN_HOUR_BEFORE_CONFIRM, "hour").format("HH:mm")
+                : "00:00"
+            }
             value={timeFrom}
             onChange={(e) => {
               setTimeFrom(e.target.value);
@@ -168,9 +172,11 @@ export function FormDateTimeInput({
             id="time-picker"
             step="60"
             defaultValue="00:00"
-            min={dayjs(dateFrom)
-              .add(MIN_HOUR_BEFORE_CONFIRM, "hour")
-              .format("HH:mm")}
+            min={
+              dayjs(dateFrom).isSame(dayjs(), "day")
+                ? dayjs().add(MIN_HOUR_BEFORE_CONFIRM, "hour").format("HH:mm")
+                : "00:00"
+            }
             value={timeTo}
             onChange={(e) => {
               if (e.target.value < timeFrom && dateTo === dateFrom) {

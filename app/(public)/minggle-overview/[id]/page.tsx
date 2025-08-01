@@ -7,7 +7,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { useParams } from "next/navigation";
-import { use, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { timezoneList } from "@/lib/timezones";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -82,7 +82,7 @@ export default function OverviewPage() {
       </h1>
       {data.invited.rank && (
         <h4 className="text-lg text-foreground/75 text-center -mt-2">
-          You're ranked #{data.invited.rank}
+          You&apos;re ranked #{data.invited.rank}
         </h4>
       )}
 
