@@ -20,7 +20,7 @@ export default function EmailEditedMinggle({
         <CustomButton
           href={`${process.env.SITE_URL}/minggle-overview/${invitedId}`}
         >
-          See Minggle
+          See Updated Minggle
         </CustomButton>
       </PlaceHolder>
     </HTMLWrapper>

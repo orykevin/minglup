@@ -14,7 +14,7 @@ export default function EmailCancelledMinggle({
         <CustomButton
           href={`http://localhost:3000/minggle-overview/${invitedId}`}
         >
-          See Minggle
+          See Minggle event
         </CustomButton>
       </PlaceHolder>
     </HTMLWrapper>

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "MinglUp",
   description: "Mingle with your friends",
   icons: {
-    icon: "/convex.svg",
+    icon: "/icon.svg",
   },
 };
 

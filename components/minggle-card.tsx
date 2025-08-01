@@ -17,6 +17,7 @@ type MinggleCardProps = {
 
 export const MinggleCard = ({ data }: MinggleCardProps) => {
   const router = useRouter();
+
   const localDate = useMemo(() => {
     const localDateFrom = dayjs(data.dateFrom).local();
     const localDateTo = dayjs(data.dateTo).local();
@@ -24,13 +25,16 @@ export const MinggleCard = ({ data }: MinggleCardProps) => {
       localDateFrom.format("DD MM") !== localDateTo.format("DD MM");
     const isDifferentMonth =
       localDateFrom.format("MM") !== localDateTo.format("MM");
+    const isExpired = dayjs().isAfter(dayjs(data.dateTo));
     return {
       from: localDateFrom,
       to: localDateTo,
       isDifferentDay,
       isDifferentMonth,
+      isExpired,
     };
   }, [data]);
+
   return (
     <div
       className="border p-3 rounded-sm bg-card hover:ring ring-blue-400 transition-all cursor-pointer"
@@ -45,6 +49,7 @@ export const MinggleCard = ({ data }: MinggleCardProps) => {
           <span
             className={cn(
               "absolute top-0 left-0 w-full h-2 bg-blue-400",
+              localDate.isExpired && "bg-yellow-600",
               data.isCanceled && "bg-red-500",
               data.isFinished && "bg-green-600",
             )}

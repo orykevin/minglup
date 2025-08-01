@@ -65,6 +65,11 @@ export default function MingglePage() {
     api.minggle.cancelMinggle,
   );
 
+  const isExpired = useMemo(() => {
+    if (!data) return false;
+    return dayjs().isAfter(dayjs(data.dateTo));
+  }, [data]);
+
   const localDate = useMemo(() => {
     if (!data) return;
     const localDateFrom = dayjs(data.dateFrom).local();
@@ -94,8 +99,6 @@ export default function MingglePage() {
     };
   }, [data]);
 
-  console.log(confirmedInvite);
-
   const isCanEdit = useMemo(() => {
     if (!data) return false;
     return (data.editCount || 0) >= MAX_EDIT_COUNT;
@@ -111,15 +114,18 @@ export default function MingglePage() {
           className={cn(
             "mb-3 text-primary-foreground",
             data.isFinished ? "bg-green-600" : "bg-blue-500",
+            isExpired && "bg-yellow-600",
           )}
         >
           {data.isCanceled
             ? "Canceled"
             : data.isFinished
               ? "Finished"
-              : "On-going"}
+              : isExpired
+                ? "Expired"
+                : "On-going"}
         </Badge>
-        {userData?._id === data.userId && !data.isCanceled && (
+        {userData?._id === data.userId && (
           <span>
             <DropdownMenu>
               <DropdownMenuTrigger>
@@ -133,7 +139,9 @@ export default function MingglePage() {
                   <p>See Mail logs</p>
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  disabled={isCanEdit}
+                  disabled={
+                    isCanEdit || isExpired || data.isFinished || data.isCanceled
+                  }
                   onClick={() => router.push(`/minggle/${data._id}/edit`)}
                 >
                   <Pencil />
@@ -141,11 +149,19 @@ export default function MingglePage() {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => router.push(`/minggle/${data._id}/invite`)}
+                  disabled={
+                    isCanEdit || isExpired || data.isFinished || data.isCanceled
+                  }
                 >
                   <Plus />
                   <p>Invite</p>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setOpenDialog(true)}>
+                <DropdownMenuItem
+                  onClick={() => setOpenDialog(true)}
+                  disabled={
+                    isCanEdit || isExpired || data.isFinished || data.isCanceled
+                  }
+                >
                   <X />
                   <p>Cancel</p>
                 </DropdownMenuItem>
@@ -239,7 +255,7 @@ export default function MingglePage() {
               const email2Rank =
                 confirmedInvite?.find((e) => e.email === email2)?.rank || 0;
 
-              return email2Rank - email1Rank;
+              return email1Rank - email2Rank;
             })
             .map((email) => {
               const emailStatus = statusEmailData?.find(
