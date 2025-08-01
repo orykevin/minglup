@@ -65,7 +65,7 @@ export const htmlRenderer = async (ctx: ActionCtx, type: string, minggleData: Do
             return await pretty(await render(React.createElement(EmailCancelledMinggle, { invitedId: invitedData._id })))
         case "confirmed":
             return await pretty(await render(React.createElement(EmailConfirmedMinggle, { invitedId: invitedData._id, rank: (invitedData.rank || 0) })))
-        case "informed":
+        case "info":
             return await pretty(await render(React.createElement(EmailInformedMinggle, { invitedId: invitedData._id, peopleLeft: (peopleLeft || 0) })))
     }
 }
@@ -81,7 +81,7 @@ export const subjectRenderer = (type: string, title: string) => {
             return `Minggle Event Cancelled`
         case "confirmed":
             return `You’re Confirmed for ${title}`
-        case "informed":
+        case "info":
             return `Attendance Info for ${title}`
     }
 }

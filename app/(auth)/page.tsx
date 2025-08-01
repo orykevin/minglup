@@ -9,16 +9,23 @@ import { useQuery } from "convex-helpers/react/cache";
 import { api } from "@/convex/_generated/api";
 import { MinggleCard } from "@/components/minggle-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import dayjs from "dayjs";
 
 export default function Home() {
   const router = useRouter();
   const allMinggle = useQuery(api.minggle.getActiveMinggle, {});
 
   const activeMinggle = allMinggle?.filter(
-    (minggle) => !minggle.isFinished && !minggle.isCanceled,
+    (minggle) =>
+      !minggle.isFinished &&
+      !minggle.isCanceled &&
+      dayjs().isBefore(dayjs(minggle.dateTo)),
   );
   const pastMinggle = allMinggle?.filter(
-    (minggle) => minggle.isFinished || minggle.isCanceled,
+    (minggle) =>
+      minggle.isFinished ||
+      minggle.isCanceled ||
+      dayjs().isAfter(dayjs(minggle.dateTo)),
   );
 
   const onClickCreate = () => {

@@ -25,42 +25,44 @@ export const HeaderAuth = () => {
 
   const userData = useQueryCache(api.user.getProfile);
   return (
-    <header className="bg-background p-4 border-b-2 border-slate-200 dark:border-slate-800 flex flex-row justify-between items-center">
-      <h4
-        onClick={() => router.push("/")}
-        className="flex gap-1 items-center text-foreground font-bold cursor-pointer"
-      >
-        <MinggleIcon />
-        MinglUp
-      </h4>
-      {isAuthenticated ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <Avatar>
-              <AvatarImage src={userData?.image ?? ""} />
-              <AvatarFallback>
-                <User2 />
-              </AvatarFallback>
-            </Avatar>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>
-              {userData === undefined ? (
-                <Skeleton className="w-full h-6" />
-              ) : (
-                (userData?.name ?? "")
-              )}
-            </DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => signOut().then(() => router.push("/"))}
-            >
-              Sign out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : (
-        <div className="animate-pulse bg-slate-200 dark:bg-slate-800 text-foreground rounded-full w-10 h-10" />
-      )}
+    <header className="bg-background p-4 border-b-2 border-slate-200 dark:border-slate-800 ">
+      <div className="max-w-5xl mx-auto flex flex-row justify-between items-center">
+        <h4
+          onClick={() => router.push("/")}
+          className="flex gap-1 items-center text-foreground font-bold cursor-pointer"
+        >
+          <MinggleIcon />
+          MinglUp
+        </h4>
+        {isAuthenticated ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Avatar>
+                <AvatarImage src={userData?.image ?? ""} />
+                <AvatarFallback>
+                  <User2 />
+                </AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>
+                {userData === undefined ? (
+                  <Skeleton className="w-full h-6" />
+                ) : (
+                  (userData?.name ?? "")
+                )}
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => signOut().then(() => router.push("/"))}
+              >
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="animate-pulse bg-slate-200 dark:bg-slate-800 text-foreground rounded-full w-10 h-10" />
+        )}
+      </div>
     </header>
   );
 };

@@ -25,11 +25,10 @@ export const confirmInvitedPeople = mutation({
             rank: confirmed.length + 1
         })
 
-        const emails = allInvitedPeople.filter((invited) => invited.email !== invitedData.email).map((invited) => invited.email)
+        const remainingEmails = allInvitedPeople.filter((invited) => invited.email !== invitedData.email && !invited.confirmedAt).map((invited) => invited.email)
         const mingglePayload = { minggleId: invitedData.minggleId, minggleRef: (minggle.editCount || 0) }
-
         await sendEmailHelper(ctx, { emails: [invitedData.email], ...mingglePayload }, 'confirmed')
-        await sendEmailHelper(ctx, { emails, ...mingglePayload }, 'info')
+        remainingEmails.length > 0 && await sendEmailHelper(ctx, { emails: remainingEmails, ...mingglePayload }, 'info')
 
         return "The invited person has been successfully confirmed."
     },

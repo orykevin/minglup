@@ -17,6 +17,7 @@ import dayjs from "dayjs";
 import { Label } from "./FormWrapper";
 import { useFormContext } from "react-hook-form";
 import { getTimeStringFromDate } from "@/lib/utils";
+import { MIN_HOUR_BEFORE_CONFIRM } from "@/convex/constant";
 
 export function FormDateTimeInput({
   defaultFrom,
@@ -117,6 +118,7 @@ export function FormDateTimeInput({
             id="time-picker"
             step="60"
             defaultValue="00:00"
+            min={dayjs().add(MIN_HOUR_BEFORE_CONFIRM, "hour").format("HH:mm")}
             value={timeFrom}
             onChange={(e) => {
               setTimeFrom(e.target.value);
@@ -166,6 +168,9 @@ export function FormDateTimeInput({
             id="time-picker"
             step="60"
             defaultValue="00:00"
+            min={dayjs(dateFrom)
+              .add(MIN_HOUR_BEFORE_CONFIRM, "hour")
+              .format("HH:mm")}
             value={timeTo}
             onChange={(e) => {
               if (e.target.value < timeFrom && dateTo === dateFrom) {

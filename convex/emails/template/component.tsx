@@ -46,10 +46,8 @@ export const HTMLWrapper = ({
 export const Logo = () => (
   <div
     style={{
-      display: "flex",
-      alignItems: "center",
-      gap: "4px",
       marginBottom: "12px",
+      display: "flex",
     }}
   >
     <Img
@@ -58,7 +56,9 @@ export const Logo = () => (
       width="40"
       height="40"
     />
-    <Text style={{ fontSize: "18px", fontWeight: "bold" }}>MinglUp</Text>
+    <Text style={{ fontSize: "18px", fontWeight: "bold", margin: "6px" }}>
+      MinglUp
+    </Text>
   </div>
 );
 
