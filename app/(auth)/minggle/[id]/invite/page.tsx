@@ -58,7 +58,7 @@ export default function InvitePage() {
       const isNotUserEmail = userData?.email === invite.email;
       return isValidEmail.success && !isExist && !isNotUserEmail;
     });
-  }, [invites]);
+  }, [invites, data]);
 
   const handleInviteMinggle = () => {
     if (emailChecker.includes(false)) return;
@@ -100,7 +100,10 @@ export default function InvitePage() {
         {data.emails.map((email) => {
           const emailStatus = statusEmailData?.find((e) => e?.email === email);
           return (
-            <div className="flex justify-between items-center p-3 border rounded-md">
+            <div
+              className="flex justify-between items-center p-3 border rounded-md"
+              key={email}
+            >
               <p className="text-lg font-semibold" key={email}>
                 {email}
               </p>
@@ -182,8 +185,8 @@ export default function InvitePage() {
         <DialogContent>
           <DialogHeader>Invite more</DialogHeader>
           <DialogDescription>
-            You will invite {invites.length} people, you can't remove invited
-            emails later, make sure you invite the right emails
+            You will invite {invites.length} people, you can&apos;t remove
+            invited emails later, make sure you invite the right emails
           </DialogDescription>
           <div className="space-y-2">
             {invites.map((invite) => (
@@ -225,6 +228,7 @@ export default function InvitePage() {
             };
             return (
               <div
+                key={email}
                 onClick={onClick}
                 className={cn(
                   "flex p-2 font-semibold border rounded-md hover:ring ring-blue-500 items-center justify-between",
@@ -273,7 +277,7 @@ const EmailInput = ({
           key={invite.id}
           onChange={(e) =>
             setInvites((invites) => {
-              let newInvites = [...invites];
+              const newInvites = [...invites];
               newInvites[index] = {
                 id: newInvites[index].id,
                 email: e.target.value,

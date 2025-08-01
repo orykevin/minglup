@@ -19,7 +19,6 @@ interface InputProps extends React.InputHTMLAttributes<HTMLTextAreaElement> {
 
 export const TextareaFormInput = ({
   label,
-  type = "text",
   name,
   className,
   fieldClassName,

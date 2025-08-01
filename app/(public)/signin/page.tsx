@@ -12,7 +12,11 @@ export default function SignIn() {
     <div className="flex flex-col gap-8 w-full max-w-[480px] py-[5vh] mx-auto h-[calc(100vh-24px)] max-h-[1000px] justify-between">
       <h1 className="text-6xl leading-[1] font-semibold">Ready to Minggle?</h1>
       <div className="w-full overflow-hidden">
-        <img src="/minggle-group.png" className="object-cover"></img>
+        <img
+          alt="minggle-group"
+          src="/minggle-group.png"
+          className="object-cover"
+        ></img>
       </div>
       <div className="w-full flex flex-col gap-4">
         <p className="text-center text-foreground/50">

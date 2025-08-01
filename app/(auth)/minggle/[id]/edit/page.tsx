@@ -8,7 +8,6 @@ import * as z from "zod";
 import { TextFormInput } from "@/components/forms/FormInput";
 import { Button } from "@/components/ui/button";
 import { TextareaFormInput } from "@/components/forms/FormTextareaInput";
-import { FormMultiSelect } from "@/components/forms/FormMultiSelect";
 import SearchableMap from "@/components/maps/searchable-map";
 import {
   Dialog,
@@ -95,7 +94,7 @@ export default function EditMingglePage() {
       forms.setValue("dateTo", timzonedTo.toDate());
       forms.setValue("timezone", data.timezone);
     }
-  }, [data]);
+  }, [data, forms]);
 
   const editInfo = useMemo(() => {
     return {
@@ -287,14 +286,14 @@ const SkeletonForm = () => {
     <div>
       <Skeleton className="w-40 h-8 mb-3" />
       <div className="space-y-3">
-        {[...new Array(3)].map(() => (
-          <div className="space-y-1">
+        {[...new Array(3)].map((_, i) => (
+          <div className="space-y-1" key={i}>
             <Skeleton className="w-24 h-6" />
             <Skeleton className="w-full h-8" />
           </div>
         ))}
-        {[...new Array(2)].map(() => (
-          <div className="space-y-1">
+        {[...new Array(2)].map((_, i) => (
+          <div className="space-y-1" key={i}>
             <Skeleton className="w-24 h-6" />
             <div className="w-full flex gap-3">
               <Skeleton className="flex-2 h-8" />
@@ -302,8 +301,8 @@ const SkeletonForm = () => {
             </div>
           </div>
         ))}
-        {[...new Array(2)].map(() => (
-          <div className="space-y-1">
+        {[...new Array(2)].map((_, i) => (
+          <div className="space-y-1" key={i}>
             <Skeleton className="w-24 h-6" />
             <Skeleton className="w-full h-8" />
           </div>

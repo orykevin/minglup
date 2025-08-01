@@ -9,15 +9,17 @@ export default async function Layout({
   params,
 }: {
   children: React.ReactNode;
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const resolvedParams = await params;
   try {
     await fetchQuery(
       api.minggle.getMinggle,
-      { minggleId: params.id as Id<"minggle"> },
+      { minggleId: resolvedParams.id as Id<"minggle"> },
       { token: await convexAuthNextjsToken() },
     );
-  } catch (error) {
+  } catch (e) {
+    console.log(e);
     redirect("/");
   }
 

@@ -33,7 +33,9 @@ const EmptyPlaceholder = ({
         </h6>
       </div>
       <div className="max-w-[400px]">
-        {imageSrc && <img src={imageSrc} className="mt-3 " />}
+        {imageSrc && (
+          <img alt={"img-placeholder"} src={imageSrc} className="mt-3 " />
+        )}
         <Button
           onClick={clickAction}
           className="h-10 text-lg font-semibold w-full"
