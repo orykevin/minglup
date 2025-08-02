@@ -71,10 +71,6 @@ export default function ConfirmationPage() {
       dateFromMs - now <= MIN_HOUR_BEFORE_CONFIRM * 60 * 60 * 1000;
     const isMaxTime = dateToMs - now <= 0;
     const isConfirmTime = isMinTime && !isMaxTime;
-    console.log(dayjs(data?.minggleData.dateTo).format(), "datenow");
-    console.log(dateToMs - now, dateToMs, now);
-
-    console.log(data?.minggleData.dateFrom, data?.minggleData.dateTo);
 
     return {
       isAvailable: isConfirmTime,

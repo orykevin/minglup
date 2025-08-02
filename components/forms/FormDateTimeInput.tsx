@@ -173,7 +173,7 @@ export function FormDateTimeInput({
             step="60"
             defaultValue="00:00"
             min={
-              dayjs(dateFrom).isSame(dayjs(), "day")
+              dayjs(dateTo).isSame(dayjs(), "day")
                 ? dayjs().add(MIN_HOUR_BEFORE_CONFIRM, "hour").format("HH:mm")
                 : "00:00"
             }

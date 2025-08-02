@@ -100,6 +100,11 @@ export default function EditMingglePage() {
     return {
       editRemaining: MAX_EDIT_COUNT - (data?.editCount || 0),
       cantEdit: (data?.editCount || 0) >= MAX_EDIT_COUNT,
+      isExpired: dayjs().isAfter(dayjs(data?.dateTo)),
+      isNotAvailable:
+        data?.isCanceled ||
+        data?.isFinished ||
+        dayjs().isAfter(dayjs(data?.dateTo)),
     };
   }, [data]);
 
@@ -109,7 +114,17 @@ export default function EditMingglePage() {
     <div>
       <h1 className="text-2xl my-3 font-bold">
         Edit minggle{" "}
-        <span className="text-sm font-semibold">{`(${editInfo.editRemaining} ${editInfo.editRemaining > 1 ? "edits" : "edit"} left)`}</span>
+        {editInfo.isNotAvailable ? (
+          <span className="text-sm text-red-500">
+            {editInfo.isExpired
+              ? " (expired)"
+              : data?.isCanceled
+                ? " (canceled)"
+                : " (finished)"}
+          </span>
+        ) : (
+          <span className="text-sm font-semibold">{`(${editInfo.editRemaining} ${editInfo.editRemaining > 1 ? "edits" : "edit"} left)`}</span>
+        )}
       </h1>
       <FormWrapper
         forms={forms}
@@ -163,7 +178,11 @@ export default function EditMingglePage() {
           </LinkButton>
           <Button
             className="flex-1"
-            disabled={(data.editCount || 0) >= MAX_EDIT_COUNT}
+            disabled={
+              (data.editCount || 0) >= MAX_EDIT_COUNT ||
+              editInfo.isExpired ||
+              editInfo.isNotAvailable
+            }
           >
             Submit
           </Button>
@@ -199,7 +218,7 @@ const FullInformation = ({
   editInfo,
 }: {
   allValue: Omit<z.infer<typeof formSchema>, "emails">;
-  editInfo: { editRemaining: number; cantEdit: boolean };
+  editInfo: { editRemaining: number; cantEdit: boolean; isExpired: boolean };
 }) => {
   const router = useRouter();
   const params = useParams();
@@ -240,6 +259,13 @@ const FullInformation = ({
               });
               router.push(`/minggle/${params.id}`);
             },
+            onError: (error) => {
+              toast({
+                title: "Error",
+                description: error.data,
+                variant: "destructive",
+              });
+            },
           },
         );
       }
@@ -273,7 +299,7 @@ const FullInformation = ({
       <Button
         className="w-full mt-6"
         onClick={createMinggleHandler}
-        disabled={editInfo.cantEdit}
+        disabled={editInfo.cantEdit || editInfo.isExpired}
       >
         {isPending ? "Loading..." : "Confirm"}
       </Button>

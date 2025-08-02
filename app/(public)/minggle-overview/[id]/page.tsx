@@ -38,7 +38,7 @@ export default function OverviewPage() {
       localDateFrom.format("DD MM") !== localDateTo.format("DD MM");
     const isDifferentMonth =
       localDateFrom.format("MM") !== localDateTo.format("MM");
-
+    const isExpired = dayjs().isAfter(localDateTo);
     // Convert to UTC to original timezone
     const timezonedFrom = dayjs
       .utc(data.minggleData.dateFrom)
@@ -60,6 +60,7 @@ export default function OverviewPage() {
       timezone,
       isDifferentDay,
       isDifferentMonth,
+      isExpired,
     };
   }, [data]);
 
@@ -103,15 +104,19 @@ export default function OverviewPage() {
           <Badge
             variant={data.minggleData.isCanceled ? "destructive" : "default"}
             className={cn(
-              "text-primary-foreground",
-              data.minggleData.isFinished ? "bg-green-600" : "bg-blue-500",
+              "text-primary-foreground bg-blue-500",
+              localDate?.isExpired && "bg-yellow-600",
+              data.minggleData.isFinished && "bg-green-600",
+              data.minggleData.isCanceled && "bg-red-500",
             )}
           >
             {data.minggleData?.isCanceled
               ? "Canceled"
-              : data.minggleData?.isFinished
-                ? "Finished"
-                : "On-going"}
+              : localDate?.isExpired
+                ? "Expired"
+                : data.minggleData?.isFinished
+                  ? "Finished"
+                  : "On-going"}
           </Badge>
         </div>
         <div className="flex justify-between items-start !mb-8">

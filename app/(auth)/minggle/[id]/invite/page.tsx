@@ -24,6 +24,7 @@ import { toast } from "@/hooks/use-hooks";
 import { useConvexMutation } from "@/lib/convex-functions";
 import { cn } from "@/lib/utils";
 import { useQuery } from "convex-helpers/react/cache";
+import dayjs from "dayjs";
 import { Check, MailPlus, Plus, Trash, X } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
@@ -91,6 +92,16 @@ export default function InvitePage() {
   const maximumExceed =
     invites.length + (data?.emails.length || 0) > MAX_INVITED_PEOPLE;
 
+  const editInfo = useMemo(() => {
+    return {
+      isExpired: dayjs().isAfter(dayjs(data?.dateTo)),
+      isNotAvailable:
+        data?.isCanceled ||
+        data?.isFinished ||
+        dayjs().isAfter(dayjs(data?.dateTo)),
+    };
+  }, [data]);
+
   if (data === undefined) return <div>Loading...</div>;
 
   return (
@@ -115,7 +126,10 @@ export default function InvitePage() {
       <div className="flex h-max items-center justify-between mb-3 mt-4">
         <h4 className="font-bold text-lg">Invite More</h4>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger
+            asChild
+            disabled={maximumExceed || editInfo.isNotAvailable}
+          >
             <Button size="sm">
               <MailPlus />
             </Button>
@@ -160,6 +174,15 @@ export default function InvitePage() {
             You can invite maximum {MAX_INVITED_PEOPLE} people
           </p>
         )}
+        {editInfo.isNotAvailable && (
+          <p className="text-red-500 font-semibold mt-3">
+            {editInfo.isExpired
+              ? "Minggle is expired"
+              : data?.isCanceled
+                ? "Minggle is canceled"
+                : "Minggle is finished"}
+          </p>
+        )}
         <div className="flex gap-3 mt-8">
           <LinkButton
             className="flex-1"
@@ -174,7 +197,8 @@ export default function InvitePage() {
             disabled={
               !emailChecker.every(Boolean) ||
               invites.length < 1 ||
-              maximumExceed
+              maximumExceed ||
+              editInfo.isNotAvailable
             }
           >
             Submit

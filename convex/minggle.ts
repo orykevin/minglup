@@ -161,9 +161,15 @@ export const getMinggleData = async (ctx: MutationCtx | QueryCtx, minggleId: Id<
 }
 
 export const isMinggleAvailable = (minggleData: Doc<"minggle">) => {
-    const isEnoughTime = dayjs.utc(minggleData.dateTo).valueOf() - Date.now() > (MIN_HOUR_BEFORE_CONFIRM * 60 * 60 * 1000)
-    console.log(dayjs.utc(minggleData.dateTo).format())
-    console.log(dayjs.utc(minggleData.dateTo).valueOf(), Date.now(), dayjs.utc(minggleData.dateTo).valueOf() - Date.now(), MIN_HOUR_BEFORE_CONFIRM * 60 * 60 * 1000)
+    const isEnoughTime = dayjs.utc(minggleData.dateTo).valueOf() - Date.now() > (1 * 60 * 60 * 1000)
+    const isExpired = dayjs.utc(minggleData.dateTo).valueOf() - Date.now() <= 0
+    // console.log(dayjs.utc(minggleData.dateTo).format())
+    // console.log(dayjs.utc(minggleData.dateTo).valueOf(), Date.now(), dayjs.utc(minggleData.dateTo).valueOf() - Date.now(), MIN_HOUR_BEFORE_CONFIRM * 60 * 60 * 1000)
+    if (!minggleData.isCanceled) throw new ConvexError("This minggle is already cancelled")
+    if (!minggleData.isFinished) throw new ConvexError("This minggle is already finished")
+    if (isExpired) throw new ConvexError("This minggle is expired")
+    if (!isEnoughTime) throw new ConvexError("This minggle is almost expired")
+
     return (!minggleData.isCanceled && !minggleData.isFinished && isEnoughTime)
 }
 
