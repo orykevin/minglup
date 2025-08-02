@@ -35,15 +35,26 @@ export const MinggleCard = ({ data }: MinggleCardProps) => {
     };
   }, [data]);
 
+  const invitedPeople = (data as any)?.invitedPeople;
+
   return (
     <div
-      className="border p-3 rounded-sm bg-card hover:ring ring-blue-400 transition-all cursor-pointer"
+      className="relative border p-3 rounded-sm bg-card hover:ring ring-blue-400 transition-all cursor-pointer"
       onClick={() => {
-        router.push(`/minggle/${data._id}`);
+        router.push(
+          invitedPeople > 0
+            ? `/minggle-overview/${data._id}`
+            : `/minggle/${data._id}`,
+        );
       }}
       key={data._id}
       tabIndex={0}
     >
+      {invitedPeople > 0 && (
+        <span className="p-1.5 px-4 text-sm font-semibold bg-primary absolute -top-1 right-0 rounded-md">
+          Invited
+        </span>
+      )}
       <div className="flex gap-3 items-center">
         <div className="relative border p-3 pb-2 min-w-[100px] rounded-[6px]">
           <span
@@ -112,7 +123,9 @@ export const MinggleCard = ({ data }: MinggleCardProps) => {
           <User2 className="min-w-8" />
           <p className="line-clamp-1">
             Invited{" "}
-            {`${data.emails.length > 1 ? `${data.emails.length} people` : `${data.emails.length} person`}`}
+            {invitedPeople > 0
+              ? `${invitedPeople > 1 ? `${invitedPeople} people` : `${invitedPeople} person`}`
+              : `${data.emails.length > 1 ? `${data.emails.length} people` : `${data.emails.length} person`}`}
           </p>
         </div>
       </div>

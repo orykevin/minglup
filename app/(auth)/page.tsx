@@ -10,10 +10,28 @@ import { api } from "@/convex/_generated/api";
 import { MinggleCard } from "@/components/minggle-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import dayjs from "dayjs";
+import { Doc } from "@/convex/_generated/dataModel";
 
 export default function Home() {
   const router = useRouter();
   const allMinggle = useQuery(api.minggle.getActiveMinggle, {});
+  const allInvitedMinggle = useQuery(api.invitedPeople.getInvitedList, {});
+
+  const activeInvited = allInvitedMinggle?.filter(
+    (minggle) =>
+      minggle &&
+      !minggle.isFinished &&
+      !minggle.isCanceled &&
+      dayjs().isBefore(dayjs(minggle.dateTo)),
+  ) as Doc<"minggle">[] | undefined;
+
+  const pastInvited = allInvitedMinggle?.filter(
+    (minggle) =>
+      minggle &&
+      (minggle.isFinished ||
+        minggle.isCanceled ||
+        dayjs().isAfter(dayjs(minggle.dateTo))),
+  ) as Doc<"minggle">[] | undefined;
 
   const activeMinggle = allMinggle?.filter(
     (minggle) =>
@@ -58,19 +76,43 @@ export default function Home() {
                 </Skeleton>
               ))}
             </div>
-          ) : allMinggle.length > 0 ? (
+          ) : allMinggle.length + (activeInvited?.length || 0) > 0 ? (
             <div>
-              <div className="space-y-3">
-                {activeMinggle?.map((minggle) => (
-                  <MinggleCard key={minggle._id} data={minggle} />
-                ))}
-              </div>
-              {(pastMinggle || []).length > 0 && (
+              {
+                <div className="space-y-3">
+                  {(activeMinggle?.length || 0) + (activeInvited?.length || 0) >
+                  0 ? (
+                    [
+                      ...(activeMinggle ? activeMinggle : []),
+                      ...(activeInvited ? activeInvited : []),
+                    ]
+                      ?.sort((a, b) => b._creationTime - a._creationTime)
+                      .map((minggle) => (
+                        <MinggleCard key={minggle._id} data={minggle} />
+                      ))
+                  ) : (
+                    <EmptyPlaceholder
+                      title="No Minggle yet"
+                      subtitle="Create a new minggle"
+                      buttonText="Create a minggle"
+                      imageSrc="/wave.png"
+                      clickAction={onClickCreate}
+                    />
+                  )}
+                </div>
+              }
+              {((pastMinggle || []).length > 0 ||
+                (pastInvited || []).length > 0) && (
                 <div className="mt-4 space-y-3">
                   <h4 className="text-xl font-bold mb-4">Your past minggle</h4>
-                  {pastMinggle?.map((minggle) => (
-                    <MinggleCard key={minggle._id} data={minggle} />
-                  ))}
+                  {[
+                    ...(pastMinggle ? pastMinggle : []),
+                    ...(pastInvited ? pastInvited : []),
+                  ]
+                    ?.sort((a, b) => b._creationTime - a._creationTime)
+                    .map((minggle) => (
+                      <MinggleCard key={minggle._id} data={minggle} />
+                    ))}
                 </div>
               )}
             </div>
@@ -86,16 +128,6 @@ export default function Home() {
           )}
         </div>
       </div>
-      {false && (
-        <div className="w-full h-full border">
-          <div className="flex justify-between">
-            <h4>Finished minggle</h4>
-            <Button size="icon">
-              <Plus />
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -10,12 +10,14 @@ export default function SignIn() {
   const router = useRouter();
   return (
     <div className="flex flex-col gap-8 w-full max-w-[480px] py-[5vh] mx-auto h-[calc(100vh-24px)] max-h-[1000px] justify-between">
-      <h1 className="text-6xl leading-[1] font-semibold">Ready to Minggle?</h1>
+      <h1 className="text-5xl md:text-6xl leading-[1] font-semibold">
+        Ready to <br /> Minggle?
+      </h1>
       <div className="w-full overflow-hidden">
         <img
           alt="minggle-group"
           src="/minggle-group.png"
-          className="object-cover"
+          className="w-full h-full object-contain"
         ></img>
       </div>
       <div className="w-full flex flex-col gap-4">

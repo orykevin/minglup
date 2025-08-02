@@ -1,8 +1,36 @@
 import { ConvexError, v } from "convex/values";
 import { internalQuery, mutation, query } from "./_generated/server";
-import { isMinggleOwner } from "./middleware";
+import { isAuthUserId, isMinggleOwner } from "./middleware";
 import { sendEmailHelper } from "./emails";
 import { isAvailableToConfirm } from "./minggle";
+
+export const getInvitedList = query({
+    handler: async (ctx) => {
+        const userId = await isAuthUserId(ctx)
+        const userData = await ctx.db.get(userId)
+        if (!userData) throw new ConvexError("Cannot get user data")
+
+        const invitedLists = await ctx.db.query("invitedPeople").withIndex("byEmail", (q) => q.eq("email", (userData.email || ""))).collect()
+        const mappedInvitedList = await Promise.all(invitedLists.map(async (invitedList) => {
+            const minggleData = await ctx.db.get(invitedList.minggleId)
+            if (!minggleData) return null
+            return {
+                _id: invitedList._id,
+                _creationTime: minggleData._creationTime,
+                title: minggleData.title,
+                description: minggleData.description,
+                invitedPeople: minggleData.emails.length,
+                address: minggleData.address,
+                dateFrom: minggleData.dateFrom,
+                dateTo: minggleData.dateTo,
+                isCanceled: minggleData.isCanceled,
+                isFinished: minggleData.isFinished
+            }
+        }))
+
+        return mappedInvitedList
+    },
+})
 
 export const confirmInvitedPeople = mutation({
     args: {
