@@ -165,8 +165,8 @@ export const isMinggleAvailable = (minggleData: Doc<"minggle">) => {
     const isExpired = dayjs.utc(minggleData.dateTo).valueOf() - Date.now() <= 0
     // console.log(dayjs.utc(minggleData.dateTo).format())
     // console.log(dayjs.utc(minggleData.dateTo).valueOf(), Date.now(), dayjs.utc(minggleData.dateTo).valueOf() - Date.now(), MIN_HOUR_BEFORE_CONFIRM * 60 * 60 * 1000)
-    if (!minggleData.isCanceled) throw new ConvexError("This minggle is already cancelled")
-    if (!minggleData.isFinished) throw new ConvexError("This minggle is already finished")
+    if (minggleData.isCanceled) throw new ConvexError("This minggle is already cancelled")
+    if (minggleData.isFinished) throw new ConvexError("This minggle is already finished")
     if (isExpired) throw new ConvexError("This minggle is expired")
     if (!isEnoughTime) throw new ConvexError("This minggle is almost expired")
 

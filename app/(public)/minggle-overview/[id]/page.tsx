@@ -217,8 +217,8 @@ export default function OverviewPage() {
               <QRCode
                 value={`${window.location.origin}/confirmation/${data.invited._id}`}
                 style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                bgColor="var(--card)"
-                fgColor="var(--foreground)"
+                bgColor="white"
+                fgColor="black"
               />
             </div>
             <p className="text-sm font-semibold text-foreground/75 my-3">
