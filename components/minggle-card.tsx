@@ -51,7 +51,7 @@ export const MinggleCard = ({ data }: MinggleCardProps) => {
       tabIndex={0}
     >
       {invitedPeople > 0 && (
-        <span className="p-1.5 px-4 text-sm font-semibold bg-primary absolute -top-1 right-0 rounded-md">
+        <span className="p-1.5 px-4 text-sm font-semibold bg-primary text-white absolute -top-1 right-0 rounded-md">
           Invited
         </span>
       )}
